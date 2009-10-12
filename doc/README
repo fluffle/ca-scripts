@@ -1,0 +1,61 @@
+1. Creating a Certificate Authority.
+
+
+
+
+To fully understand it's contents you're unfortunately going to need to read ca(1ssl),
+req(1ssl), x509(1ssl), config(5ssl), and x509v3_config(5ssl). Particularly
+important are the x509v3 extensions present in the certificate, which are
+defined in the "stglab_x509_ca_extensions" section of the config file.
+
+  The ca-cert script configures some important files in db/, then creates a
+certificate request and signs it. It also generates an initial (empty)
+revocation list, then substitutes the correct fingerprints into the html
+template for serving the CA certificate and CRL to the intranet.
+
+2. Creating a certificate.
+
+  The create-cert script can generate three "types" of certificate -- server
+certificates for securing a service with SSL/TLS, client certificates for
+authenticating a client to these services, and user certificates for
+authentication, S/MIME e-mail signing or encryption, and code signing. There
+are minor but important differences in the extensions present in these 
+different certificate types, but these are set in the *-ext.tpl files in tpl/
+and thus you shouldn't need to worry about them.
+
+  The create-cert script takes a number of arguments, of which the hostname or
+username and the type are mandatory. It is also a very good idea to supply a
+number of alternative DNS names when generating a server certificate, because
+while the script will happily append "stglab.manchester.uk.ibm.com" to an
+un-qualified host name, it won't append "transitives.com" and for the moment we
+probably need that.
+
+  You should also provide a team name for the organisational unit, e.g. 
+"Manchester STG Lab Test", an e-mail address (preferably for the team rather
+than an individual for server/client certificates), and a comment that reflects
+the usage of the certificate, e.g. "Soak Infrastructure Live Server". Reasonable
+defaults are provided for all of these for our team's use.
+
+3. Renewing a certificate.
+
+  The renew-cert script does some painful certificate manipulation that is not
+strictly necessary in most cases, and may in fact decrease SSL security
+slightly. This is done because the normal renewal process re-generates the
+certificate signing request and thus creates a new public/private keypair.
+If the certificates are used for S/MIME encryption or code signing, this
+renders all the encrypted e-mail unreadable and requires you to re-sign the
+code with your new private key. The code in renew-cert re-signs the old
+certificate request with a new expiry date and the extensions generated when
+the original certificate was created, and avoids this problem.
+
+  Renewing a certificate is done by giving the hostname, username or path to
+the certificate to renew-cert.sh.
+
+4. Revoking a certificate.
+
+  Revoking a certificate is done by giving the hostname, username or path to
+the certificat to revoke-cert.sh. This script also regenerates a new CRL in
+both PEM and DER encodings (firefox prefers the latter while IE and other
+browsers work better with the former), and re-generates the html file with the
+new fingerprints.
+

@@ -1,0 +1,3 @@
+gvim -p bin/* lib/*
+gvim -p ca-scripts.conf tpl/*
+gvim -p doc/*

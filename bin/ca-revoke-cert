@@ -1,0 +1,51 @@
+#! /bin/sh
+
+. "/home/alex/code/ca-scripts/lib/ca-functions"
+
+usage() {
+    cat <<__EOT__
+Usage: $PROGNAME -t <type> [options] <hostname|username|certpath>
+
+Options:
+  -h, --help            Print this helpful message!
+  -f, --config FILE     Use config file instead of $CONFFILE
+  -t, --type            Certificate type: "server", "client" or "user"
+  -i, --template FILE   Use alternative index.html template
+  -o, --output FILE     Generate CA index.html in FILE
+
+__EOT__
+}
+  
+short='hf:t:i:o:'
+long='help,config:,type:,template:,output:'
+opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
+if [ 0 -ne $? ]; then echo; usage; exit 1; fi
+eval set -- "$opts";
+
+while :; do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -f|--config) shift; CONFFILE="$1"; shift;;
+        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        -i|--template) shift; INDEXTPL="$1"; shift;;
+        -o|--output) shift; INDEXOUT="$1"; shift;;
+        --) shift; break;;
+        *) echo "Unknown value '$1'"; exit 1;;
+    esac
+done
+CNF_NAME="$1"
+
+ca_load_conf
+
+CNF_NAME=$( ca_find_cnf "$CNF_NAME" "$TYPE" )
+CRT="$CA_HOME/crt/$CNF_NAME.crt"
+
+openssl ca -config $CA_HOME/cnf/$CA_NAME.ca.cnf \
+  -revoke $CRT -crl_reason superseded
+
+ca_gen_crl
+if [ -n "$INDEXOUT" ]; then
+    ca_checksum
+    ca_template $INDEXTPL $INDEXOUT
+fi
+

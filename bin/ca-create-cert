@@ -1,0 +1,169 @@
+#! /bin/bash
+
+. "/home/alex/code/ca-scripts/lib/ca-functions"
+
+ALT_NAMES=()
+TPL_ONLY=0
+CSR_ONLY=0
+CRT_ONLY=0
+MAKE_P12=0
+
+# XXX: in the ca_extension_policy section of ca-config.tpl it states that the 
+#      C= and O= DN values in a CSR have to match those of the CA
+#      should we have options here to change them when it will cause breakage?
+usage() {
+    cat <<__EOT__
+Usage:
+  $PROGNAME -t server [options] <hostname>
+  $PROGNAME -t client [options] <hostname>
+  $PROGNAME -t user   [options] <username>
+
+Options:
+  -h, --help            Print this helpful message!
+  -c, --encrypt         Encrypt certificate private key with Triple-DES
+  -f, --config FILE     Use config file instead of $CONFFILE
+  -t, --type            Certificate type: "server", "client" or "user"
+  -n, --alt-name        Alternative host name (can be provided multiple times)
+  -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
+  -r, --csr-only        Only generate CSR, don't sign it
+  -s, --crt-only        Only sign certificate, requires CSR in place
+  -x, --tpl-only        Only generate templates, do not create CSR or sign CRT
+  --country             Certificate DN -- C
+  --state               Certificate DN -- ST
+  --loc                 Certificate DN -- L
+  --org                 Certificate DN -- O
+  --org-unit            Certificate DN -- OU
+  --email               Certificate DN -- E
+  --comment             Certificate nsComment field
+
+__EOT__
+}
+
+short='hcf:t:n:prsx'
+long='help,encrypt.config:,type:,alt-name:,csr-only,crt-only,tpl-only,pkcs12'
+long="$long,country:,state:,loc:,org:,org-unit:,email:,comment:"
+opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
+if [ 0 -ne $? ]; then echo; usage; exit 1; fi
+eval set -- "$opts";
+
+while :; do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -c|--encrypt) CRYPTKEY=""; shift;;
+        -f|--config) shift; CONFFILE="$1"; shift;;
+        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
+        -p|--pkcs12) MAKE_P12=1; shift;;
+        -r|--csr-only) CSR_ONLY=1; shift;;
+        -s|--crt-only) CRT_ONLY=1; shift;;
+        -x|--tpl-only) TPL_ONLY=1; shift;;
+        --country) shift; CA_CRT_C="$1"; shift;;
+        --state) shift; CA_CRT_ST="$1"; shift;;
+        --location) shift; CA_CRT_L="$1"; shift;;
+        --org) shift; CA_CRT_O="$1"; shift;;
+        --org-unit) shift; CA_CRT_OU="$1"; shift;;
+        --email) shift; CA_CRT_E="$1"; shift;;
+        --comment) shift; CA_CRT_COMMENT="$1"; shift;;
+        --) shift; break;;
+        *) echo "Unknown value '$1'"; exit 1;;
+    esac
+done
+CA_CRT_CN="$1";
+
+# load up the configuration file
+ca_load_conf
+
+# parameter checking fun -- we need a type and a cn (either user or host name)
+if [ -z "$CA_CRT_CN" ]; then 
+    error "The host or username parameter is mandatory!"
+fi
+
+if [ 1 -eq "$CSR_ONLY" -a 1 -eq "$CRT_ONLY" ]; then
+    error "Options --csr-only and --crt-only are mutually exclusive."
+fi
+
+if [ "$CA_CRT_TYPE" = "user" ]; then
+    # append @$CA_DOMAIN to user CN if it's not already there
+    if [ "${CA_CRT_CN%%@*}" = "$CA_CRT_CN" ]; then
+        CA_CRT_CN="$CA_CRT_CN@$CA_DOMAIN";
+    fi
+else
+    # fully qualify server or client CN with $CA_DOMAIN if it's not already
+    if [ "${CA_CRT_CN%%.*}" = "$CA_CRT_CN" ]; then
+        # however we may also want the unqualified one as an alt-name
+        ALT_NAMES+=("$CA_CRT_CN")
+        CA_CRT_CN="$CA_CRT_CN.$CA_DOMAIN"
+    fi
+fi
+CNF_NAME=$( echo -n "$CA_CRT_CN" | tr -c '[:alnum:]@-' _ )".$CA_CRT_TYPE";
+
+# if they've provided a comment, reformat it correctly
+if [ -n "$CA_CRT_COMMENT" ]; then
+    CA_CRT_COMMENT="$( tr -d\" <<< $CA_CRT_COMMENT )"
+    CA_CRT_COMMENT="nsComment               = \"$CA_CRT_COMMENT\"\n"
+else
+    CA_CRT_COMMENT=""
+fi
+
+CA_CRT_ALT_NAMES=""
+# generate a list of alternative DNS names for server certificates
+if [ "$CA_CRT_TYPE" = "server" ]; then
+    i=1
+    for ALT_NAME in "$CA_CRT_CN" "${ALT_NAMES[@]}"; do
+        # also fully-qualify unqualified alt-names too (see below)
+        if [ "${ALT_NAME%%.*}" = "$ALT_NAME" ]; then
+            CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME.$CA_DOMAIN\n"
+            i=$(( $i+1 ))
+        fi
+        CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME\n"
+        i=$(( $i+1 ))
+    done
+fi
+
+if [ 1 -ne "$CRT_ONLY" ]; then
+    if [ 1 -eq "$TPL_ONLY" -o "$CSR_ONLY" -eq "$TPL_ONLY" ]; then
+        # dirty logic here that probably needs commenting!
+        # generate a *new* certificate request configuration if...
+        #   a) --tpl-only is set, i.e. we only want to generate a config
+        #   b) both --tpl-only and --csr-only are unset, i.e.
+        #      we're just generating a csr/crt as per usual
+        #   c) both --tpl-only and --csr-only are set, i.e.
+        #      we're just generating the config and not the csr itself
+        ca_template "req-config" "$CA_HOME/cnf/$CNF_NAME.req.cnf"
+    fi
+    if [ 1 -ne "$TPL_ONLY" ]; then
+        if [ ! -f "$CA_HOME/cnf/$CNF_NAME.req.cnf" ]; then
+            error "Couldn't find CSR config $CA_HOME/cnf/$CNF_NAME.req.cnf!"
+        fi
+        # the above logic means that if you pass --csr-only but not
+        # --tpl-only, you can re-use a pre-existing config to generate
+        # a new csr, should you wish to do so...
+        openssl req -new $CRYPTKEY -config "$CA_HOME/cnf/$CNF_NAME.req.cnf" \
+          -keyout "$CA_HOME/key/$CNF_NAME.key" \
+          -out    "$CA_HOME/csr/$CNF_NAME.csr"
+    fi
+fi
+if [ 1 -ne "$CSR_ONLY" ]; then
+    if [ 1 -eq "$TPL_ONLY" -o "$CRT_ONLY" -eq "$TPL_ONLY" ]; then
+        # same logic above applies here, but for generating the extensions
+        # configuration file and signed certificate instead
+        ca_template "$CA_CRT_TYPE-ext" "$CA_HOME/cnf/$CNF_NAME.ext.cnf"
+    fi
+    if [ 1 -ne "$TPL_ONLY" ]; then
+        # ensure relevant files are in place before continuing...
+        if [ ! -f "$CA_HOME/csr/$CNF_NAME.csr" ]; then
+            error "CSR not present in $CA_HOME/csr/$CNF_NAME.csr"
+        fi
+        if [ ! -f "$CA_HOME/cnf/$CNF_NAME.ext.cnf" ]; then
+            error "Couldn't find extensions in $CA_HOME/cnf/$CNF_NAME.ext.cnf"
+        fi
+        openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
+          -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" -batch \
+          -out     "$CA_HOME/crt/$CNF_NAME.crt" \
+          -in      "$CA_HOME/csr/$CNF_NAME.csr"
+    fi
+fi
+
+if [ 1 -eq "$MAKE_P12" ]; then
+    ca_gen_p12 "$CNF_NAME"
+fi

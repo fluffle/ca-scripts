@@ -1,0 +1,198 @@
+#! /bin/bash
+# common functions for ca-scripts
+
+PROGNAME=$( basename $0 )
+CONFFILE="/etc/ca-scripts.conf"
+SHAREDIR="/home/alex/code/ca-scripts/tpl"
+CRYPTKEY="-nodes"
+
+INDEXTPL="index-html"
+INDEXOUT=""
+
+error() {
+    usage >&2
+    echo -e "ERROR: $1\n" >&2
+    exit 1
+}
+
+ca_check_var() {
+    local varname vartest
+
+    varname="$1"
+    vartest="$2"
+    eval "if [ ! $vartest \"\$$varname\" ]; then
+              echo '$varname value \"\$$varname\" failed \"$vartest\" test'
+          fi"
+}
+
+ca_set_default() {
+    local varname vardef
+    
+    varname="$1"
+    vardef="$2"
+    eval "if [ -z \"\$$varname\" ]; then
+              $varname=\"$vardef\";
+          fi"
+}
+
+ca_load_conf() {
+    local varname vartest varerr vardef error ca_name
+    if [ ! -r "$CONFFILE" ]; then
+        error "Unable to find $CONFFILE."
+    fi
+    # XXX: seems like . <file> doesn't work if it's not relative to a directory
+    #      look this up on the internet sometime to work out why...
+    if [ "$CONFFILE" = "$( basename $CONFFILE )" ]; then
+        CONFFILE="./$CONFFILE"
+    fi
+    . "$CONFFILE"
+    
+    error=""
+    while read vartest varname; do
+        varerr=$( ca_check_var "$varname" "$vartest" )
+        if [ -n "$varerr" ]; then
+            error="$error\n  $varerr"
+        fi
+    done <<__TESTS__
+-d CA_HOME
+-n CA_DOMAIN
+-n CA_DN_C
+-n CA_DN_ST
+-n CA_DN_L
+-n CA_DN_O
+-n CA_DN_OU
+-n CA_DN_CN
+__TESTS__
+    if [ -n "$error" ]; then
+        error "Parsing config file $CONFFILE failed:\n$error"
+    fi
+    
+    case "$CA_CRT_TYPE" in
+        server|client|user|ca) :;;
+        '') error "The type option is mandatory!";;
+        *) error "Unrecognised type '$CA_CRT_TYPE'!";;
+    esac
+
+    # we need to do these first to use them in other default defs
+    # NOTE: bash's here-string syntax appends \n which tr turns to _ :(
+    ca_set_default CA_NAME  "$( echo -n "$CA_DOMAIN" | tr -c '[:alnum:]@-' _ )"
+    ca_set_default CA_EMAIL "ca@$CA_DOMAIN"
+
+    while read varname vardef; do
+        ca_set_default "$varname" "$vardef"
+    done <<__DEFAULTS__
+CA_DESC         $CA_DN_CN
+CA_CRT_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crt
+CA_CRL_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crl
+CA_PATHLEN      0
+CA_CRT_C        $CA_DN_C
+CA_CRT_ST       $CA_DN_ST
+CA_CRT_L        $CA_DN_L
+CA_CRT_O        $CA_DN_O
+CA_CRT_OU       $CA_DN_OU
+CA_CRT_E        $CA_EMAIL
+__DEFAULTS__
+}
+
+ca_sed_cmd() {
+    # MD5 in CA_CR[TL]_MD5_FP has a non alphabetic character :(
+    # XXX: pretty sure this is a dirty and wrong way of templating vars
+    set | awk -F\= '/^CA_[A-Z5_]*=/{print $1}' | while read ca_var; do
+        echo "s#%$ca_var%#${!ca_var}#;"
+    done
+}
+
+ca_template() {
+    local template dest
+
+    if [ -r "$1" ]; then 
+        template="$1"
+    elif [ -r "$SHAREDIR/$1.tpl" ]; then
+        template="$SHAREDIR/$1.tpl"
+    else
+        error "Could not read from template $1"
+    fi
+    dest="$2"
+
+    sed -e "$(ca_sed_cmd)" <"$template" >"$dest"
+}
+
+ca_gen_crl() {
+    openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
+      -gencrl -out "$CA_HOME/crl/$CA_NAME.ca.crl" -md sha1
+    openssl crl -in "$CA_HOME/crl/$CA_NAME.ca.crl" \
+      -out "$CA_HOME/crl/$CA_NAME.ca.crl.der" -outform DER
+}
+
+ca_gen_p12() {
+    local cnf_name
+    cnf_name="$1"
+    openssl pkcs12 -export -descert -out $CA_HOME/p12/$cnf_name.p12 \
+      -in       $CA_HOME/crt/$cnf_name.crt \
+      -inkey    $CA_HOME/key/$cnf_name.key \
+      -certfile $CA_HOME/crt/$CA_NAME.ca.crt
+}
+
+ca_checksum() {
+    CA_CRT_MD5_FP="$( openssl x509 -in $CA_HOME/crt/$CA_NAME.ca.crt \
+      -noout -md5 -fingerprint | cut -d= -f2 )"
+    CA_CRT_SHA_FP="$( openssl x509 -in $CA_HOME/crt/$CA_NAME.ca.crt \
+      -noout -sha1 -fingerprint | cut -d= -f2 )"
+    CA_CRL_MD5_FP="$( openssl crl -in $CA_HOME/crl/$CA_NAME.ca.crl \
+      -noout -md5 -fingerprint | cut -d= -f2 )"
+    CA_CRL_SHA_FP="$( openssl crl -in $CA_HOME/crl/$CA_NAME.ca.crl \
+      -noout -sha1 -fingerprint | cut -d= -f2 )"
+}
+
+ca_cnf_name() {
+    local crt
+    crt="$1"
+    # work out what configuration files we should be using from the cert's CN
+    echo $( openssl x509 -in "$crt" -noout -nameopt sep_multiline,use_quote \
+      -subject | grep "CN=" | cut -d= -f2 | tr -c '[:alnum:]@-' _ )
+}
+
+ca_find_cnf() {
+    local name _name
+    name="$1"
+
+    if [ -f "$name" ]; then
+        if ! grep -q "$CA_CRT_TYPE" <<<"$name"; then
+            error "Certificate '$name' does not appear to be of type '$CA_CRT_TYPE'"
+        else
+            echo "$(ca_cnf_name $name).$CA_CRT_TYPE"
+        fi
+        return
+    fi
+    
+    _name=$( echo -n "$name" | tr -c '[:alnum:]@-' _ )
+    if [ "$CA_CRT_TYPE" = "user" ]; then 
+        # user names may have dots etc. in, so use munged version in match
+        # check if name is "user@domain", append $CA_DOMAIN if not
+        if [ "${_name%%@*}" = "$_name" \
+             -a -f "$CA_HOME/crt/${_name}@$CA_NAME.$CA_CRT_TYPE.crt" ];
+        then
+            # name is not fully-qualified, but a cert exists for it
+            echo "${_name}@$CA_NAME.$CA_CRT_TYPE"
+        elif [ -f "$CA_HOME/crt/$_name.$CA_CRT_TYPE.crt" ]; then
+            # name was fully-qualified and a cert exists
+            echo "$_name.$CA_CRT_TYPE"
+        else
+            error "Could not find $CA_CRT_TYPE certificate configuration matching '$name'"
+        fi
+    else
+        # check if name is fully-qualified -- contains more than 1 dot
+        # NOTE: we have to do this test with the unmunged name ...
+        if [ "${name%%.*}" = "$name" \
+             -a -f "$CA_HOME/crt/${_name}_$CA_NAME.$CA_CRT_TYPE.crt" ];
+        then
+            # name is not fully-qualified, but a cert exists for it
+            echo "${_name}_$CA_NAME.$CA_CRT_TYPE"
+        elif [ -f "$CA_HOME/crt/$_name.$CA_CRT_TYPE.crt" ]; then
+            # name was fully-qualified and a cert exists
+            echo "$_name.$CA_CRT_TYPE"
+        else
+            error "Could not find $CA_CRT_TYPE certificate configuration matching '$name'"
+        fi
+    fi
+}

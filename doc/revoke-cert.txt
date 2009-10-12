@@ -1,0 +1,18 @@
+# a brief man-page for revoke-cert.sh
+# $Id: revoke-cert.txt 2660 2009-07-24 18:49:52Z alexeb $
+
+NAME
+        revoke-cert.sh - revoke a certificate and generate revocation list
+
+SYNOPSIS
+        revoke-cert.sh /path/to/certificate
+        revoke-cert.sh <hostname>
+        revoke-cert.sh <username>
+
+DESCRIPTION
+        This script revokes the provided certificate and updates the revocation
+        list. It generates both a PEM and a DER encoded version of the CRL for
+        different browsers, and updates the html page with the new fingerprints.
+
+OPTIONS
+        This script takes no options.

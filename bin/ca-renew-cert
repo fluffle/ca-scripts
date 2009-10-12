@@ -1,0 +1,80 @@
+#! /bin/bash
+
+. "/home/alex/code/ca-scripts/lib/ca-functions"
+
+usage() {
+    cat <<__EOT__
+Usage: $PROGNAME -t <type> [options] <hostname|username|certpath>
+
+Options:
+  -h, --help            Print this helpful message!
+  -f, --config FILE     Use config file instead of $CONFFILE
+  -t, --type            Certificate type: "server", "client" or "user"
+
+__EOT__
+}
+
+short='hf:t:'
+long='help,config:,type:'
+opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
+if [ 0 -ne $? ]; then echo; usage; exit 1; fi
+eval set -- "$opts";
+
+while :; do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -f|--config) shift; CONFFILE="$1"; shift;;
+        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        --) shift; break;;
+        *) echo "Unknown value '$1'"; exit 1;;
+    esac
+done
+
+CNF_NAME="$1"
+
+ca_load_conf
+
+CNF_NAME=$( ca_find_cnf "$CNF_NAME" )
+CRT="$CA_HOME/crt/$CNF_NAME.crt"
+
+# make sure that configuration files are present as expected
+if [ ! -f "$CA_HOME/cnf/$CNF_NAME.ext.cnf" ]; then
+    error "Couldn't find extensions in $CA_HOME/cnf/$CNF_NAME-ext.cnf"
+fi
+
+# according to the below URL we should create the new CRT using the old CSR
+# and with the same serial as the previous certificate.
+#   http://blog.fupps.com/2007/11/30/x509ssl-certificate-prolongation/
+# After some fun googling, I found the following URL which tells us how...
+#   http://ca.dutchgrid.nl/info/CA_gymnastics.html
+# XXX: this is only *really* relevant for certs that have been used for code
+#      or e-mail encryption. should we regenerate client/server certs entirely?
+#      ... for the moment there's always the revoke/recreate route for people.
+
+# acquire required info from old certificate
+ENDDATE=$( openssl x509 -in "$CRT" -noout -enddate | cut -d= -f2 )
+SERIAL=$( openssl x509 -in "$CRT" -noout -serial | cut -d= -f2 )
+# work out new expiry date based on expiry date of current cert + 1 year
+# these dates are "<year> <day of year>"
+export TZ=UTC 
+NOWYEAR=$( date +%Y )
+NOWDAYS=$( date +%j ) 
+ENDYEAR=$( date +%Y -d "$ENDDATE + 1 year" )
+ENDDAYS=$( date +%j -d "$ENDDATE + 1 year" )
+CERTDATE=$( date +%Y-%m-%d -d "$ENDDATE" )
+
+# and this does the maths to work out how many days there are from now
+# (when we're creating the new cert) to the new expiry date
+DAYS=$(( ($ENDYEAR-$NOWYEAR)*365 + ($ENDDAYS-$NOWDAYS) ))
+
+# Now perform required CA gymnastics ;p
+openssl x509 -req -set_serial "0x$SERIAL" -days "$DAYS" \
+  -CA      "$CA_HOME/crt/$CA_NAME.ca.crt" \
+  -CAkey   "$CA_HOME/key/$CA_NAME.ca.key" \
+  -extfile "$CA_HOME/cfg/$CNF_NAME.ext.cnf" \
+  -out     "$CA_HOME/crt/$CNF_NAME.crt" \
+  -in      "$CA_HOME/csr/$CNF_NAME.csr"
+
+# This doesn't update the original certificate in the index, so let's do that
+mv "$CA_HOME/idx/$SERIAL.pem" "$CA_HOME/idx/$SERIAL.$CERTDATE.pem"
+cp "$CA_HOME/crt/$CNF_NAME.crt" "$CA_HOME/idx/$SERIAL.pem"
