@@ -149,7 +149,11 @@ ca_cnf_name() {
     crt="$1"
     # work out what configuration files we should be using from the cert's CN
     echo $( openssl x509 -in "$crt" -noout -nameopt sep_multiline,use_quote \
-      -subject | grep "CN=" | cut -d= -f2 | tr -c '[:alnum:]@-' _ )
+      -subject | awk -F= '/CN=/{ gsub("[^A-Za-z0-9@-]", "_", $2); print $2}' ) 
+      #          grep "CN=" | cut -d= -f2 | tr -c '[:alnum:]@-' _ )
+      # originally did this like the above but tried awk instead. awk(1) seems
+      # to lie about it's egrep(1) support though as no matter what I tried the
+      # tr(1) regex didn't work in the gsub() call above.
 }
 
 ca_find_cnf() {

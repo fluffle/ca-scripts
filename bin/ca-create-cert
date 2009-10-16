@@ -3,7 +3,7 @@
 . "/home/alex/code/ca-scripts/lib/ca-functions"
 
 ALT_NAMES=()
-TPL_ONLY=0
+CNF_ONLY=0
 CSR_ONLY=0
 CRT_ONLY=0
 MAKE_P12=0
@@ -23,11 +23,12 @@ Options:
   -c, --encrypt         Encrypt certificate private key with Triple-DES
   -f, --config FILE     Use config file instead of $CONFFILE
   -t, --type            Certificate type: "server", "client" or "user"
+  -d, --days DAYS       Certificate is valid for DAYS days instead of 365
   -n, --alt-name        Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -r, --csr-only        Only generate CSR, don't sign it
   -s, --crt-only        Only sign certificate, requires CSR in place
-  -x, --tpl-only        Only generate templates, do not create CSR or sign CRT
+  -x, --cnf-only        Only generate templates, do not create CSR or sign CRT
   --country             Certificate DN -- C
   --state               Certificate DN -- ST
   --loc                 Certificate DN -- L
@@ -40,7 +41,7 @@ __EOT__
 }
 
 short='hcf:t:n:prsx'
-long='help,encrypt.config:,type:,alt-name:,csr-only,crt-only,tpl-only,pkcs12'
+long='help,encrypt,config:,type:,alt-name:,pkcs12,csr-only,crt-only,cnf-only'
 long="$long,country:,state:,loc:,org:,org-unit:,email:,comment:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
@@ -52,11 +53,12 @@ while :; do
         -c|--encrypt) CRYPTKEY=""; shift;;
         -f|--config) shift; CONFFILE="$1"; shift;;
         -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        -d|--days) shift; CA_CRT_DAYS="-days $1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
         -r|--csr-only) CSR_ONLY=1; shift;;
         -s|--crt-only) CRT_ONLY=1; shift;;
-        -x|--tpl-only) TPL_ONLY=1; shift;;
+        -x|--cnf-only) CNF_ONLY=1; shift;;
         --country) shift; CA_CRT_C="$1"; shift;;
         --state) shift; CA_CRT_ST="$1"; shift;;
         --location) shift; CA_CRT_L="$1"; shift;;
@@ -111,7 +113,10 @@ if [ "$CA_CRT_TYPE" = "server" ]; then
     i=1
     for ALT_NAME in "$CA_CRT_CN" "${ALT_NAMES[@]}"; do
         # also fully-qualify unqualified alt-names too (see below)
-        if [ "${ALT_NAME%%.*}" = "$ALT_NAME" ]; then
+        # NOTE: except when it's the previously-fully-qualified CN...
+        # XXX: maybe we should uniq the alt-names? hmm.
+        if [ "${ALT_NAME%%.*}" = "$ALT_NAME" \
+          -a "${CA_CRT_CN%%.*}" != "$ALT_NAME" ]; then
             CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME.$CA_DOMAIN\n"
             i=$(( $i+1 ))
         fi
@@ -121,7 +126,7 @@ if [ "$CA_CRT_TYPE" = "server" ]; then
 fi
 
 if [ 1 -ne "$CRT_ONLY" ]; then
-    if [ 1 -eq "$TPL_ONLY" -o "$CSR_ONLY" -eq "$TPL_ONLY" ]; then
+    if [ 1 -eq "$CNF_ONLY" -o "$CSR_ONLY" -eq "$CNF_ONLY" ]; then
         # dirty logic here that probably needs commenting!
         # generate a *new* certificate request configuration if...
         #   a) --tpl-only is set, i.e. we only want to generate a config
@@ -131,7 +136,7 @@ if [ 1 -ne "$CRT_ONLY" ]; then
         #      we're just generating the config and not the csr itself
         ca_template "req-config" "$CA_HOME/cnf/$CNF_NAME.req.cnf"
     fi
-    if [ 1 -ne "$TPL_ONLY" ]; then
+    if [ 1 -ne "$CNF_ONLY" ]; then
         if [ ! -f "$CA_HOME/cnf/$CNF_NAME.req.cnf" ]; then
             error "Couldn't find CSR config $CA_HOME/cnf/$CNF_NAME.req.cnf!"
         fi
@@ -144,12 +149,12 @@ if [ 1 -ne "$CRT_ONLY" ]; then
     fi
 fi
 if [ 1 -ne "$CSR_ONLY" ]; then
-    if [ 1 -eq "$TPL_ONLY" -o "$CRT_ONLY" -eq "$TPL_ONLY" ]; then
+    if [ 1 -eq "$CNF_ONLY" -o "$CRT_ONLY" -eq "$CNF_ONLY" ]; then
         # same logic above applies here, but for generating the extensions
         # configuration file and signed certificate instead
         ca_template "$CA_CRT_TYPE-ext" "$CA_HOME/cnf/$CNF_NAME.ext.cnf"
     fi
-    if [ 1 -ne "$TPL_ONLY" ]; then
+    if [ 1 -ne "$CNF_ONLY" ]; then
         # ensure relevant files are in place before continuing...
         if [ ! -f "$CA_HOME/csr/$CNF_NAME.csr" ]; then
             error "CSR not present in $CA_HOME/csr/$CNF_NAME.csr"
@@ -157,7 +162,7 @@ if [ 1 -ne "$CSR_ONLY" ]; then
         if [ ! -f "$CA_HOME/cnf/$CNF_NAME.ext.cnf" ]; then
             error "Couldn't find extensions in $CA_HOME/cnf/$CNF_NAME.ext.cnf"
         fi
-        openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
+        openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" $CA_CRT_DAYS \
           -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" -batch \
           -out     "$CA_HOME/crt/$CNF_NAME.crt" \
           -in      "$CA_HOME/csr/$CNF_NAME.csr"
