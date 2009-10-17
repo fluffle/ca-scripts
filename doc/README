@@ -43,7 +43,7 @@ templates provided with the scripts.
 
   ca-create-cert(1) takes a number of options to customise the generated 
 certificate. The --type option is mandatory, and for server certs it is very
-likely that the --alt-name option will be useful to set x509v3 SubjectAltName
+likely that the --alt-name option will be useful to set x509v3 subjectAltName
 DNS records for other hostnames for the server. Both the server hostname and
 any alternative names will be fully-qualified to CA_DOMAIN if they do not
 contain any dots, but if unqualified names are passed in they are also
@@ -87,9 +87,9 @@ information required for certificate renewal.
 
 4. Revoking a certificate.
 
-  Revoking a certificate is done by giving the hostname, username or path to
-the certificat to revoke-cert.sh. This script also regenerates a new CRL in
-both PEM and DER encodings (firefox prefers the latter while IE and other
-browsers work better with the former), and re-generates the html file with the
-new fingerprints.
-
+  To revoke a certificate and re-generate the CA certficate revocation list in
+both PEM and DER encodings, invoke ca-revoke-cert(1), again providing the
+--type option and either the hostname, username or the path to the certificate
+to be revoked. Along with ca_init(1) this script can optionally generate a
+basic HTML template to serve the CA certificate and CRL with verifiable MD5 and
+SHA1 checksums.

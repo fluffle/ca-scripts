@@ -9,6 +9,11 @@ CRYPTKEY="-nodes"
 INDEXTPL="index-html"
 INDEXOUT=""
 
+# ideally, run these scripts as an unprivileged "ssl" user/group
+# and place users that need access to ssl certs into that group
+# no world-readable stuff here
+umask 027
+
 error() {
     usage >&2
     echo -e "ERROR: $1\n" >&2
