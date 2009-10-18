@@ -45,6 +45,9 @@ ca_load_conf
 if [ 1 -eq "$CRT_ONLY" -a 1 -eq "$CNF_ONLY" ]; then
     error "The --crt-only and --cnf-only options are mutually exclusive."
 fi
+if [ 1 -eq "$CNF_ONLY" -a -n "$INDEXOUT" ]; then
+    error "Cannot generate index.html when not creating certificates."
+fi
 
 if [ 1 -ne "$CRT_ONLY" ]; then
     # create the directory structure that'll be populated by the scripts
@@ -57,6 +60,10 @@ if [ 1 -ne "$CRT_ONLY" ]; then
     ca_template ca-config "$CA_HOME/cnf/$CA_NAME.ca.cnf"
 fi
 if [ 1 -ne "$CNF_ONLY" ]; then
+    if [ ! -f "$CA_HOME/cnf/$CA_NAME.ca.cnf" ]; then
+        # looks like someone's running ca-init with -s without using -x first
+        error "Could not find CA config. Please run ca-init -x before using ca-init -s."
+    fi
     # generate a self-signed cert that is valid for 10 years, with
     #  ... the private key in $CA_HOME/key/$CA_NAME.ca.key
     #  ... the certificate in $CA_HOME/crt/$CA_NAME.ca.crt
@@ -64,7 +71,7 @@ if [ 1 -ne "$CNF_ONLY" ]; then
     openssl req -new $CRYPTKEY -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
       -keyout "$CA_HOME/key/$CA_NAME.ca.key" \
       -out    "$CA_HOME/csr/$CA_NAME.ca.csr"
-    chmod 600 "$CA_HOME/key/$CA_NAME.ca.key"
+    chmod 400 "$CA_HOME/key/$CA_NAME.ca.key"
 
     openssl ca -create_serial -selfsign -days 3652 -batch \
       -name ca_scripts -extensions ca_x509_extensions \
