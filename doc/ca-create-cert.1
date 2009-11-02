@@ -1,0 +1,164 @@
+.TH "ca-create-cert" "1" "16 October 2009" "ca-scripts version 0.9" "SSL Certificate Authority utilities" 
+.SH NAME
+ca-create-cert \- generate a signed X.509 SSL certificate
+.
+.SH SYNOPSIS
+.
+.SY ca-create-cert 
+\-t type
+.OP \-cprsx
+.OP \-f config
+.OP \-d days
+.OP \-n name
+.OP options
+<host or user name>
+.
+.SY ca-create-cert
+.OP \-h
+|
+.OP \-\-help
+.YS
+.
+.SH DESCRIPTION
+.
+.BR ca-create-cert (1)
+creates an openssl configuration necessary for generating a signed X.509 SSL 
+certificate, generates a certificate signing request using these configuration
+files, and signs that request using the CA private key so that it may be
+considered as trusted by anything that has imported the CA certificate.
+.
+.SH OPTIONS
+.
+.SS The host or user name
+This argument to \fBca-create-cert\fR is mandatory, and specifies the common
+name of the certificate. Depending on the type of certificate being created,
+it is interpreted as either a host name or a user name. Host names are treated
+as unqualified if they do not contain any dots and are fully qualified with
+the value of CA_DOMAIN in this case, though the unqualified name is preserved
+as an additional DNS name in the X.509v3 subjectAltName extension. User names
+are treated as unqualified if they do not contain an "@" symbol and are fully
+qualified with the value of CA_DOMAIN in this case, yielding a CN like 
+\fIuser@example.com\fR assuming CA_DOMAIN was set to "example.com".
+.
+.SS General options
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints out a short synopsis of the options to \fBca-create-cert\fR.
+.
+.TP
+\fB\-t \fITYPE\fR, \fB\-\-type \fITYPE\fR
+This argument is mandatory. \fBca-create-cert\fR can create three types of
+X.509 certificate: \fIserver\fR, \fIclient\fR, and \fIuser\fR. These differ
+in the X.509v3 extensions present in the signed certificate, and in the uses
+the certificate is trusted for. See
+.BR x509 (1ssl)
+and
+.BR x509v3_config (5ssl)
+for more details about X.509 extensions, and the \fBCERTIFICATE TYPES\fR
+section of this manual for more details on the exact differences between the
+certificate types.
+.
+.TP
+\fB\-c\fR, \fB\-\-encrypt\fR
+Encrypt the generated private key with 3DES. This is not recommended for 
+\fIserver\fR or \fIclient\fR type certificates, but is probably a good idea for
+\fIuser\fR certs.
+.
+.TP
+\fB\-f \fIFILE\fR, \fB\-\-config \fIFILE\fR
+Load the ca-scripts configuration from \fIFILE\fR instead of
+\fI/etc/ca-scripts.conf\fR.
+.
+.TP
+\fB\-d \fIDAYS\fR, \fB\-\-days \fIDAYS\fR
+Sign the certificate to be valid for \fIDAYS\fR days instead of the default of
+one year.
+.
+.TP
+\fB\-n \fINAME\fR, \fB\-\-alt-name \fINAME\fR
+Only valid for \fIserver\fR type certificates. Specifies an alternative host
+name to add to the X.509v3 \fIsubjectAltName\fR extension field, which will
+also be recognised as a valid host name for the certificate. May be provided
+multiple times to add multiple host names.
+.
+.TP
+\fB\-p\fR, \fB\-\-pkcs12\fR
+Generate a PKCS#12 format certificate archive containing the new certificate
+and private key along with the CA certificate. See
+.BR pkcs12 (1ssl)
+for more details about PKCS#12 archives.
+.
+.TP
+\fB\-r\fR, \fB\-\-csr-only\fR
+Causes \fBca-create-cert\fR to generate just the X.509 certificate signing
+request (CSR) from a pre-existing openssl request configuration, without
+signing it to create a valid certificate. When used in conjunction with
+\fB\-\-cnf-only\fR, \fBca-create-cert\fR only generates the openssl request
+configuration, allowing the user to modify it before creating the CSR. Mutually
+exclusive to \fB\-\-crt-only\fR.
+.
+.TP
+\fB\-s\fR, \fB\-\-crt-only\fR
+Causes \fBca-create-cert\fR to sign a pre-existing CSR using a pre-existing
+X.509 extensions configuration, creating a valid certificate. When used in
+conjunction with \fB\-\-cnf-only\fR, \fBca-create-cert\fR only generates the
+X.509 extensions configuration, allowing the user to modify it before signing
+the certificate. Mutually exclusive to \fB\-\-csr-only\fR.
+.
+.TP
+\fB\-x\fR, \fB\-\-cnf-only\fR
+Causes \fBca-create-cert\fR to generate the openssl request and X.509
+extensions configurations, without creating a CSR or signing it. When used in
+conjunction with either of the previous two options, causes only one of the two
+configuration files to be generated.
+.
+.SS Distinguished Name (DN) options
+These options allow the user to change the value of various DN fields. Be careful
+about changing the C and O fields, as by default the CA configuration requires
+these to match the fields in the CA certificate when the CSR is signed. By
+default these values are taken from the ca-scripts configuration file, and will
+match those of the CA certificate. The certificate's common name (CN) is set by
+the mandatory host or user name parameter.
+.
+.TP
+\fB\-\-country \fI"STRING"\fR
+Sets the country (C) field of the DN.
+.TP
+\fB\-\-state \fI"STRING"\fR
+Sets the state (ST) field of the DN.
+.TP
+\fB\-\-loc \fI"STRING"\fR
+Sets the locality (L) field of the DN.
+.TP
+\fB\-\-org \fI"STRING"\fR
+Sets the organization (O) field of the DN.
+.TP
+\fB\-\-ounit \fI"STRING"\fR
+Sets the organizational unit (OU) field of the DN.
+.TP
+\fB\-\-email \fI"STRING"\fR
+Sets the e-mail address (E) field of the DN.
+.TP
+\fB\-\-comment \fI"STRING"\fR
+Sets the nsComment X.509 extension.
+.
+.SH CERTIFICATE TYPES
+.SS Server certificates
+.PP
+\fIServer\fR certificates are used for securing SSL/TLS services, such as
+TLS-encrypted LDAP connections or HTTPS. In this case the \fIhostname\fR
+argument is used for the Common Name in the certificate, and any additional
+alternative names supplied by \fB-n\fR are added to the X.509v3 
+\fIsubjectAltName\fR extension field.  
+
+
+.SS Client certificates
+.PP
+\fIClient\fR certificates are used for authenticating to SSL/TLS services. 
+For the most part they are intended to be used by automated systems to identify
+and authenticate themselves to services they interact with.
+.PP
+.SS User certificates
+\fIUser\fR certificates are for individuals to authenticate themselves to 
+SSL/TLS services in the same manner as client certificates, but they may also 
+be used for S/MIME e-mail encryption and code signing.

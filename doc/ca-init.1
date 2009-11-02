@@ -1,6 +1,6 @@
 .TH "ca-init" "1" "16 October 2009" "ca-scripts version 0.9" "SSL Certificate Authority utilities" 
 .SH NAME
-ca-init \- initialise an SSL CA and generate certificates
+ca-init \- initialise an X.509 SSL CA and generate CA certificate
 .
 .SH SYNOPSIS
 .
@@ -18,11 +18,10 @@ ca-init \- initialise an SSL CA and generate certificates
 .
 .SH DESCRIPTION
 .
-\fBca-init\fR reads the ca-scripts configuration file passed to the \fB\-f\fR
-or \fB\-\-config\fR option, or \fI/etc/ca-scripts.conf\fR by default, and uses
-the information there to generate an
+.BR ca-init (1)
+reads the ca-scripts configuration file and generates an
 .BR openssl (1)
-configuration file and a certificate and private key suitable for use as an
+configuration file and an X.509 certificate and key suitable for use as an
 .BR x509 (1)
 certificate authority. The format of the ca-scripts configuration file is
 documented in
@@ -32,8 +31,7 @@ documented in
 .
 .TP
 \fB\-h\fR, \fB\-\-help\fR
-Prints out a short synopsis of the options to
-.BR ca-init (1).
+Prints out a short synopsis of the options to \fBca-init\fR.
 .
 .TP
 \fB\-c\fR, \fB\-\-encrypt\fR

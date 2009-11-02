@@ -11,6 +11,8 @@ MAKE_P12=0
 # XXX: in the ca_extension_policy section of ca-config.tpl it states that the 
 #      C= and O= DN values in a CSR have to match those of the CA
 #      should we have options here to change them when it will cause breakage?
+# XXX: Should we provide a -q option to disable the automatic qualification of
+#      host and user names with CA_DOMAIN? It might irritate people...
 usage() {
     cat <<__EOT__
 Usage:
@@ -22,9 +24,9 @@ Options:
   -h, --help            Print this helpful message!
   -c, --encrypt         Encrypt certificate private key with Triple-DES
   -f, --config FILE     Use config file instead of $CONFFILE
-  -t, --type            Certificate type: "server", "client" or "user"
+  -t, --type TYPE       Certificate type: "server", "client" or "user"
   -d, --days DAYS       Certificate is valid for DAYS days instead of 365
-  -n, --alt-name        Alternative host name (can be provided multiple times)
+  -n, --alt-name NAME   Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -r, --csr-only        Only generate CSR, don't sign it
   -s, --crt-only        Only sign certificate, requires CSR in place
@@ -33,7 +35,7 @@ Options:
   --state               Certificate DN -- ST
   --loc                 Certificate DN -- L
   --org                 Certificate DN -- O
-  --org-unit            Certificate DN -- OU
+  --ounit               Certificate DN -- OU
   --email               Certificate DN -- E
   --comment             Certificate nsComment field
 
@@ -42,7 +44,7 @@ __EOT__
 
 short='hcf:t:n:prsx'
 long='help,encrypt,config:,type:,alt-name:,pkcs12,csr-only,crt-only,cnf-only'
-long="$long,country:,state:,loc:,org:,org-unit:,email:,comment:"
+long="$long,country:,state:,loc:,org:,ounit:,email:,comment:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
@@ -63,7 +65,7 @@ while :; do
         --state) shift; CA_CRT_ST="$1"; shift;;
         --location) shift; CA_CRT_L="$1"; shift;;
         --org) shift; CA_CRT_O="$1"; shift;;
-        --org-unit) shift; CA_CRT_OU="$1"; shift;;
+        --ounit) shift; CA_CRT_OU="$1"; shift;;
         --email) shift; CA_CRT_E="$1"; shift;;
         --comment) shift; CA_CRT_COMMENT="$1"; shift;;
         --) shift; break;;
@@ -129,10 +131,10 @@ if [ 1 -ne "$CRT_ONLY" ]; then
     if [ 1 -eq "$CNF_ONLY" -o "$CSR_ONLY" -eq "$CNF_ONLY" ]; then
         # dirty logic here that probably needs commenting!
         # generate a *new* certificate request configuration if...
-        #   a) --tpl-only is set, i.e. we only want to generate a config
-        #   b) both --tpl-only and --csr-only are unset, i.e.
+        #   a) --cnf-only is set, i.e. we only want to generate a config
+        #   b) both --cnf-only and --csr-only are unset, i.e.
         #      we're just generating a csr/crt as per usual
-        #   c) both --tpl-only and --csr-only are set, i.e.
+        #   c) both --cnf-only and --csr-only are set, i.e.
         #      we're just generating the config and not the csr itself
         ca_template "req-config" "$CA_HOME/cnf/$CNF_NAME.req.cnf"
     fi
@@ -141,7 +143,7 @@ if [ 1 -ne "$CRT_ONLY" ]; then
             error "Couldn't find CSR config $CA_HOME/cnf/$CNF_NAME.req.cnf!"
         fi
         # the above logic means that if you pass --csr-only but not
-        # --tpl-only, you can re-use a pre-existing config to generate
+        # --cnf-only, you can re-use a pre-existing config to generate
         # a new csr, should you wish to do so...
         openssl req -new $CRYPTKEY -config "$CA_HOME/cnf/$CNF_NAME.req.cnf" \
           -keyout "$CA_HOME/key/$CNF_NAME.key" \
