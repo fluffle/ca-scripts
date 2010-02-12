@@ -1,0 +1,183 @@
+#! /bin/sh
+
+if [ -z "$1" -o "$1" == "man" ]; then
+  exec /usr/bin/pod2man -n CA-CREATE-CERT -s 1 -d "12 February 2010" \
+    -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0 
+elif [ "$1" == "html" ]; then
+  exec /usr/bin/pod2html --title "ca-create-cert" < $0
+elif [ "$1" == "text" ]; then
+  exec /usr/bin/pod2text -o $0
+fi
+
+=pod
+
+=head1 NAME
+
+ca-create-cert - generate a signed X.509 SSL certificate
+
+=head1 SYNOPSIS
+
+B<ca-create-cert> -t I<type> [B<-cprsx>] [B<-f> I<config>] [B<-d> I<days>]
+[B<-n> I<name>] [I<options>] <host or user name>
+
+B<ca-create-cert> [B<-h>] | [B<--help>]
+
+=head1 DESCRIPTION
+
+ca-create-cert(1) creates an openssl configuration necessary for generating a
+signed X.509 SSL certificate, generates a certificate signing request using
+these configuration files, and signs that request using the CA private key so
+that it may be considered as trusted by anything that has imported the CA
+certificate.
+
+=head1 OPTIONS
+
+=head2 The host or user name
+
+This argument to B<ca-create-cert> is mandatory, and specifies the common
+name of the certificate. Depending on the type of certificate being created,
+it is interpreted as either a host name or a user name. Host names are treated
+as unqualified if they do not contain any dots and are fully qualified with
+the value of CA_DOMAIN in this case, though the unqualified name is preserved
+as an additional DNS name in the X.509v3 subjectAltName extension. User names
+are treated as unqualified if they do not contain an "@" symbol and are fully
+qualified with the value of CA_DOMAIN in this case, yielding a CN like 
+I<user@example.com> assuming CA_DOMAIN was set to "example.com".
+
+=head2 General options
+
+=over
+
+=item B<-h>, B<--help>
+
+Prints out a short synopsis of the options to B<ca-create-cert>.
+
+=item B<-t> I<TYPE>, B<--type> I<TYPE>
+
+This argument is mandatory. B<ca-create-cert> can create three types of
+X.509 certificate: I<server>, I<client>, and I<user>. These differ
+in the X.509v3 extensions present in the signed certificate, and in the uses
+the certificate is trusted for. See x509(1ssl) and x509v3_config(5ssl)
+for more details about X.509 extensions, and the B<CERTIFICATE TYPES>
+section of this manual for more details on the exact differences between the
+certificate types.
+
+=item B<-c>, B<--encrypt>
+
+Encrypt the generated private key with 3DES. This is not recommended for 
+I<server> or I<client> type certificates, but is probably a good idea for
+I<user> certs.
+
+=item B<-f> I<FILE>, B<--config> I<FILE>
+
+Load the ca-scripts configuration from I<FILE> instead of
+I</etc/ca-scripts.conf>.
+
+=item B<-d> I<DAYS>, B<--days> I<DAYS>
+
+Sign the certificate to be valid for I<DAYS> days instead of the default of
+one year.
+
+=item B<-n> I<NAME>, B<--alt-name> I<NAME>
+
+Only valid for I<server> type certificates. Specifies an alternative host
+name to add to the X.509v3 I<subjectAltName> extension field, which will
+also be recognised as a valid host name for the certificate. May be provided
+multiple times to add multiple host names.
+
+=item B<-p>, B<--pkcs12>
+
+Generate a PKCS#12 format certificate archive containing the new certificate
+and private key along with the CA certificate. See pkcs12(1ssl) for more 
+details about PKCS#12 archives.
+
+=item B<-r>, B<--csr-only>
+
+Causes B<ca-create-cert> to generate just the X.509 certificate signing
+request (CSR) from a pre-existing openssl request configuration, without
+signing it to create a valid certificate. When used in conjunction with
+B<--cnf-only>, B<ca-create-cert> only generates the openssl request
+configuration, allowing the user to modify it before creating the CSR. 
+Mutually exclusive to B<--crt-only>.
+
+=item B<-s>, B<--crt-only>
+
+Causes B<ca-create-cert> to sign a pre-existing CSR using a pre-existing
+X.509 extensions configuration, creating a valid certificate. When used in
+conjunction with B<--cnf-only>, B<ca-create-cert> only generates the
+X.509 extensions configuration, allowing the user to modify it before signing
+the certificate. Mutually exclusive to B<--csr-only>.
+
+=item B<-x>, B<--cnf-only>
+
+Causes B<ca-create-cert> to generate the openssl request and X.509
+extensions configurations, without creating a CSR or signing it. When used in
+conjunction with either of the previous two options, causes only one of the two
+configuration files to be generated.
+
+=back
+
+=head2 Distinguished Name (DN) options
+
+These options allow the user to change the value of various DN fields. Be careful
+about changing the C and O fields, as by default the CA configuration requires
+these to match the fields in the CA certificate when the CSR is signed. By
+default these values are taken from the ca-scripts configuration file, and will
+match those of the CA certificate. The certificate's common name (CN) is set by
+the mandatory host or user name parameter.
+
+=over
+
+=item B<--country> I<"STRING">
+
+Sets the country (C) field of the DN.
+
+=item B<--state> I<"STRING">
+
+Sets the state (ST) field of the DN.
+
+=item B<--loc> I<"STRING">
+
+Sets the locality (L) field of the DN.
+
+=item B<--org> I<"STRING">
+
+Sets the organization (O) field of the DN.
+
+=item B<--ounit> I<"STRING">
+
+Sets the organizational unit (OU) field of the DN.
+
+=item B<--email> I<"STRING">
+
+Sets the e-mail address (E) field of the DN.
+
+=item B<--comment> I<"STRING">
+
+Sets the nsComment X.509 extension.
+
+=back
+
+=head1 CERTIFICATE TYPES
+
+=head2 Server certificates
+
+I<Server> certificates are used for securing SSL/TLS services, such as
+TLS-encrypted LDAP connections or HTTPS. In this case the I<hostname> argument
+is used for the Common Name in the certificate, and any additional alternative
+names supplied by B<-n> are added to the X.509v3 I<subjectAltName> extension
+field.  
+
+=head2 Client certificates
+
+I<Client> certificates are used for authenticating to SSL/TLS services. 
+For the most part they are intended to be used by automated systems to identify
+and authenticate themselves to services they interact with.
+
+=head2 User certificates
+
+I<User> certificates are for individuals to authenticate themselves to 
+SSL/TLS services in the same manner as client certificates, but they may also 
+be used for S/MIME e-mail encryption and code signing.
+
+=cut
