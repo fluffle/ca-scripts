@@ -4,7 +4,7 @@ if [ -z "$1" -o "$1" == "man" ]; then
   exec /usr/bin/pod2man -n CA-CREATE-CERT -s 1 -d "12 February 2010" \
     -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0
 elif [ "$1" == "html" ]; then
-  exec /usr/bin/pod2html --title "ca-create-cert" < $0
+  exec /usr/bin/pod2html --title "ca-create-cert(1)" < $0
 elif [ "$1" == "text" ]; then
   exec /usr/bin/pod2text -o $0
 fi
