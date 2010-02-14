@@ -2,12 +2,14 @@
 
 if [ -z "$1" -o "$1" == "man" ]; then
   exec /usr/bin/pod2man -n CA-INIT -s 1 -d "12 February 2010" \
-    -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0 
+    -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0
 elif [ "$1" == "html" ]; then
   exec /usr/bin/pod2html --title "ca-init" < $0
 elif [ "$1" == "text" ]; then
   exec /usr/bin/pod2text -o $0
 fi
+echo "Unrecognised output format '$1', try man, html, or text."
+exit 1
 
 =pod
 
@@ -23,7 +25,7 @@ B<ca-init> [B<-h>] | [B<--help>]
 
 =head1 DESCRIPTION
 
-ca-init(1) reads the ca-scripts configuration file and generates an openssl(1)
+B<ca-init> reads the ca-scripts configuration file and generates an openssl(1)
 configuration file and an X.509 certificate and key suitable for use as an
 x509(1) certificate authority. The format of the ca-scripts configuration file
 is documented in ca-scripts.conf(5).
@@ -42,7 +44,7 @@ Encrypt the private key generated for the certificate authority with 3DES.
 
 =item B<-f> I<FILE>, B<--config> I<FILE>
 
-Load the ca-scripts configuration from I<FILE> instead of 
+Load the ca-scripts configuration from I<FILE> instead of
 I</etc/ca-scripts.conf>.
 
 =item B<-i> I<FILE>, B<--template> I<FILE>
@@ -60,7 +62,7 @@ SHA1 fingerprints of both files for verification purposes.
 =item B<-s>, B<--crt-only>
 
 Generate the CA certificate and private key from a previously-created openssl
-configuration. May only be used after having run B<ca-init> with the 
+configuration. May only be used after having run B<ca-init> with the
 B<--cnf-only> option, and mutually exclusive to that option.
 
 =item B<-x>, B<--cnf-only>
@@ -75,7 +77,7 @@ before generating the certificates. Mutually exclusive to B<--crt-only>.
 =head1 THE CA DIRECTORY STRUCTURE
 
 B<ca-init> creates a number of subdirectories under the path specified in
-the mandatory configuration variable I<CA_HOME>. This path must exist before
+the mandatory configuration variable B<CA_HOME>. This path must exist before
 B<ca-init> will run correctly. All files and directories under this path
 will be created with a restrictive umask of 0027, and in particular the CA
 private key will be created with permissions of 0400.
@@ -116,7 +118,7 @@ authority management.
 
 =item I<idx/>
 
-Contains signed certificates indexed by serial number to make certificate 
+Contains signed certificates indexed by serial number to make certificate
 revocation simpler.
 
 =item I<key/>
@@ -152,3 +154,4 @@ Copyright 2009, 2010 Alex Bramley a.bramley@gmail.com
 ca-create-cert(1), ca-scripts.conf(5), openssl(1ssl), ca(1ssl), req(1ssl),
 x509(1ssl), config(5ssl), and x509v3_config(5ssl).
 
+=cut
