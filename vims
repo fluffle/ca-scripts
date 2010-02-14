@@ -1,3 +1,3 @@
-gvim -p bin/* lib/*
+gvim -p Makefile bin/* lib/*
 gvim -p ca-scripts.conf tpl/*
-gvim -p doc/*
+gvim -p README.md doc/*
