@@ -10,6 +10,7 @@ Options:
   -h, --help            Print this helpful message!
   -f, --config FILE     Use config file instead of $CONFFILE
   -t, --type            Certificate type: "server", "client" or "user"
+  -d, --days DAYS       Renew certificate for DAYS days instead of CA_CRT_DAYS
 
 __EOT__
 }
@@ -25,6 +26,7 @@ while :; do
         -h|--help) usage; exit 0;;
         -f|--config) shift; CONFFILE="$1"; shift;;
         -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        -d|--days) shift; CA_CRT_DAYS="$1"; shift;;
         --) shift; break;;
         *) echo "Unknown value '$1'"; exit 1;;
     esac
@@ -54,13 +56,14 @@ fi
 # acquire required info from old certificate
 ENDDATE=$( openssl x509 -in "$CRT" -noout -enddate | cut -d= -f2 )
 SERIAL=$( openssl x509 -in "$CRT" -noout -serial | cut -d= -f2 )
-# work out new expiry date based on expiry date of current cert + 1 year
+# work out new expiry date based on expiry date of current cert
 # these dates are "<year> <day of year>"
 export TZ=UTC 
 NOWYEAR=$( date +%Y )
 NOWDAYS=$( date +%j ) 
-ENDYEAR=$( date +%Y -d "$ENDDATE + 1 year" )
-ENDDAYS=$( date +%j -d "$ENDDATE + 1 year" )
+# XXX: this only works with GNU date, BSD portability fail.
+ENDYEAR=$( date +%Y -d "$ENDDATE + $CA_CRT_DAYS days" )
+ENDDAYS=$( date +%j -d "$ENDDATE + $CA_CRT_DAYS days" )
 CERTDATE=$( date +%Y-%m-%d -d "$ENDDATE" )
 
 # and this does the maths to work out how many days there are from now

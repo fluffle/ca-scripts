@@ -37,8 +37,8 @@ policy          = ca_extension_policy           # policy on required CSR attribu
 # leave these defaults
 name_opt        = oneline               # Subject Name options - x509(1)
 cert_opt        = ca_default            # Certificate field options - x509(1) 
-default_days    = 365                   # how long to certify for
-default_crl_days= 365                   # how long before next CRL
+default_days    = %CA_CRT_DAYS%         # how long to certify for
+default_crl_days= %CA_CRT_DAYS%         # how long before next CRL
 default_md      = sha1                  # which md to use.
 preserve        = no                    # keep passed DN ordering
 unique_subject  = no                    # recommended
@@ -141,7 +141,7 @@ extendedKeyUsage        = serverAuth
 # ---------------------------------------------------------------------------- #
 # This defines default settings for certificate requests and CA cert creation.
 [ req ]
-default_bits            = 2048
+default_bits            = %CA_CRT_BITS%
 default_md              = sha1
 distinguished_name      = ca_req_dn
 x509_extensions         = ca_x509_extensions

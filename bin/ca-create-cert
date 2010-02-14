@@ -25,8 +25,8 @@ Options:
   -c, --encrypt         Encrypt certificate private key with Triple-DES
   -f, --config FILE     Use config file instead of $CONFFILE
   -t, --type TYPE       Certificate type: "server", "client" or "user"
-  -d, --days DAYS       Certificate is valid for DAYS days instead of 365
-  -b, --bits BITS       Generate a BITS bit certificate instead of 2048
+  -d, --days DAYS       Certificate valid for DAYS days instead of CA_CRT_DAYS
+  -b, --bits BITS       Generate a BITS bit certificate instead of CA_CRT_BITS
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -r, --csr-only        Only generate CSR, don't sign it
@@ -56,7 +56,7 @@ while :; do
         -c|--encrypt) CRYPTKEY=""; shift;;
         -f|--config) shift; CONFFILE="$1"; shift;;
         -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
-        -d|--days) shift; CA_CRT_DAYS="-days $1"; shift;;
+        -d|--days) shift; CA_CRT_DAYS="$1"; shift;;
         -b|--bits) shift; CA_CRT_BITS="$1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
@@ -166,7 +166,8 @@ if [ 1 -ne "$CSR_ONLY" ]; then
         if [ ! -f "$CA_HOME/cnf/$CNF_NAME.ext.cnf" ]; then
             error "Couldn't find extensions in $CA_HOME/cnf/$CNF_NAME.ext.cnf"
         fi
-        openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" $CA_CRT_DAYS \
+        openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
+          -days    "$CA_CRT_DAYS" \
           -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" -batch \
           -out     "$CA_HOME/crt/$CNF_NAME.crt" \
           -in      "$CA_HOME/csr/$CNF_NAME.csr"

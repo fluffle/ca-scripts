@@ -77,13 +77,13 @@ I</etc/ca-scripts.conf>.
 
 =item B<-d> I<DAYS>, B<--days> I<DAYS>
 
-Sign the certificate to be valid for I<DAYS> days instead of the default of
-one year.
+Sign the certificate to be valid for I<DAYS> days instead of the default
+B<CA_CRT_DAYS> set in the configuration file.
 
 =item B<-b> I<BITS>, B<--bits> I<BITS>
 
-Generate a I<BITS>-bit certificate instead of a default 2048-bit one.
-Traditionally this is a power of two, e.g. 512, 1024, 2048, 4096.
+Generate a I<BITS>-bit certificate instead of the default B<CA_CRT_BITS> set in
+the configuration file. Traditionally this is a power of two, e.g. 1024 or 2048.
 
 =item B<-n> I<NAME>, B<--alt-name> I<NAME>
 
