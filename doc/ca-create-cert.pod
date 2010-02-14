@@ -2,12 +2,14 @@
 
 if [ -z "$1" -o "$1" == "man" ]; then
   exec /usr/bin/pod2man -n CA-CREATE-CERT -s 1 -d "12 February 2010" \
-    -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0 
+    -r "ca-scripts version 0.9" -c "SSL Certificate Authority utilities" $0
 elif [ "$1" == "html" ]; then
   exec /usr/bin/pod2html --title "ca-create-cert" < $0
 elif [ "$1" == "text" ]; then
   exec /usr/bin/pod2text -o $0
 fi
+echo "Unrecognised output format '$1', try man, html, or text."
+exit 1
 
 =pod
 
@@ -24,7 +26,7 @@ B<ca-create-cert> [B<-h>] | [B<--help>]
 
 =head1 DESCRIPTION
 
-ca-create-cert(1) creates an openssl configuration necessary for generating a
+B<ca-create-cert> creates an openssl configuration necessary for generating a
 signed X.509 SSL certificate, generates a certificate signing request using
 these configuration files, and signs that request using the CA private key so
 that it may be considered as trusted by anything that has imported the CA
@@ -38,11 +40,11 @@ This argument to B<ca-create-cert> is mandatory, and specifies the common
 name of the certificate. Depending on the type of certificate being created,
 it is interpreted as either a host name or a user name. Host names are treated
 as unqualified if they do not contain any dots and are fully qualified with
-the value of CA_DOMAIN in this case, though the unqualified name is preserved
-as an additional DNS name in the X.509v3 subjectAltName extension. User names
+the value of B<CA_DOMAIN> in this case, though the unqualified name is preserved
+as an additional DNS name in the X.509v3 I<subjectAltName> extension. User names
 are treated as unqualified if they do not contain an "@" symbol and are fully
-qualified with the value of CA_DOMAIN in this case, yielding a CN like 
-I<user@example.com> assuming CA_DOMAIN was set to "example.com".
+qualified with the value of B<CA_DOMAIN> in this case, yielding a CN like
+I<user@example.com> assuming B<CA_DOMAIN> was set to I<example.com>.
 
 =head2 General options
 
@@ -64,7 +66,7 @@ certificate types.
 
 =item B<-c>, B<--encrypt>
 
-Encrypt the generated private key with 3DES. This is not recommended for 
+Encrypt the generated private key with 3DES. This is not recommended for
 I<server> or I<client> type certificates, but is probably a good idea for
 I<user> certs.
 
@@ -93,7 +95,7 @@ multiple times to add multiple host names.
 =item B<-p>, B<--pkcs12>
 
 Generate a PKCS#12 format certificate archive containing the new certificate
-and private key along with the CA certificate. See pkcs12(1ssl) for more 
+and private key along with the CA certificate. See pkcs12(1ssl) for more
 details about PKCS#12 archives.
 
 =item B<-r>, B<--csr-only>
@@ -102,7 +104,7 @@ Causes B<ca-create-cert> to generate just the X.509 certificate signing
 request (CSR) from a pre-existing openssl request configuration, without
 signing it to create a valid certificate. When used in conjunction with
 B<--cnf-only>, B<ca-create-cert> only generates the openssl request
-configuration, allowing the user to modify it before creating the CSR. 
+configuration, allowing the user to modify it before creating the CSR.
 Mutually exclusive to B<--crt-only>.
 
 =item B<-s>, B<--crt-only>
@@ -155,7 +157,9 @@ Sets the organizational unit (OU) field of the DN.
 
 =item B<--email> I<"STRING">
 
-Sets the e-mail address (E) field of the DN.
+Sets the e-mail address (E) field of the DN. As per the X.509 spec, this field
+is removed from the DN and placed in the X.509v3 I<subjectAltName> extension
+when the certificate is signed.
 
 =item B<--comment> I<"STRING">
 
@@ -165,24 +169,170 @@ Sets the nsComment X.509 extension.
 
 =head1 CERTIFICATE TYPES
 
+B<ca-create-cert> generates three types of certificates, differentiated by the
+SSL extensions present in the signed cert. It will always generate X.509v3
+certificates; creating a v1 certificate is not supported. All certificate types
+have the following extensions present:
+
+=over
+
+=item basicConstraints = critical, CA:FALSE
+
+Prevents the certificate from being used as a CA.
+
+=item nsRevocationUrl = B<CA_CRL_URI>
+
+Points to the world-accessible CRL distribution point for the CA.
+
+=item issuerAltName = issuer:copy
+
+Records the issuing CA certificate's I<subjectAltName> extension as
+I<issuerAltName>.
+
+=item subjectKeyIdentifier = hash
+
+Records the certificate's fingerprint as the information used to uniquely
+identify the certificate.
+
+=item authorityKeyIdentifier = keyid;issuer:always
+
+Records the issuing CA certificate's fingerprint, DN, and serial for
+verification purposes.
+
+=item authorityInfoAccess = caIssuers;URI:B<CA_CRT_URI>
+
+Points to the world-accessible CA certificate distribution point.
+
+=item crlDistributionPoints = URI:B<CA_CRL_URI>
+
+Points to the world-accessible CRL distribution point for the CA.
+
+=back
+
 =head2 Server certificates
 
 I<Server> certificates are used for securing SSL/TLS services, such as
 TLS-encrypted LDAP connections or HTTPS. In this case the I<hostname> argument
 is used for the Common Name in the certificate, and any additional alternative
 names supplied by B<-n> are added to the X.509v3 I<subjectAltName> extension
-field.  
+field.
+
+I<Server> certificates contain the following extensions:
+
+=over
+
+=item nsCertType = server
+
+Marks the certificate as valid for server authentication. This is the old
+Netscape SSL extension, but many things still rely on it.
+
+=item keyUsage = critical, keyEncipherment, keyAgreement
+
+Allows the certificate to be used for key negotiation and encryption.
+
+=item extendedKeyUsage = serverAuth
+
+Marks the certificate as valid for server authentication. This is the newer
+X.509v3 extension.
+
+=item subjectAltName = @server_altname
+
+Includes the templated [server_altname] extensions section as the X.509v3
+I<subjectAltName>. This extension contains alternate DNS entries for the server as
+provided to the B<--alt-name> option, as well as the CA certificate URI and the
+e-mail address provided to the B<--email> option.
+
+=back
 
 =head2 Client certificates
 
-I<Client> certificates are used for authenticating to SSL/TLS services. 
+I<Client> certificates are used for authenticating to SSL/TLS services.
 For the most part they are intended to be used by automated systems to identify
 and authenticate themselves to services they interact with.
 
+I<Client> certificates contain the following extensions:
+
+=over
+
+=item nsCertType = client
+
+Marks the certificate as valid for client authentication. This is the old
+Netscape SSL extension, but many things still rely on it.
+
+=item keyUsage = critical, keyEncipherment, keyAgreement, digitalSignature
+
+Allows the certificate to be used for key negotiation, encryption and creating
+digital signatures. The latter option is useful for e.g. automatically creating
+signed tarballs for distribution.
+
+=item extendedKeyUsage = clientAuth, timeStamping
+
+Marks the certificate as valid for client authentication and digital time
+stamping. This is the newer X.509v3 extension.
+
+=item subjectAltName = @client_altname
+
+Includes the templated [client_altname] extensions section as the X.509v3
+I<subjectAltName>. This extension contains the CA certificate URI and the e-mail
+address provided to the B<--email> option.
+
+=back
+
 =head2 User certificates
 
-I<User> certificates are for individuals to authenticate themselves to 
-SSL/TLS services in the same manner as client certificates, but they may also 
-be used for S/MIME e-mail encryption and code signing.
+I<User> certificates are for individuals to authenticate themselves to
+SSL/TLS services in the same manner as client certificates, but they may also
+be used for S/MIME e-mail encryption, data encryption and code signing.
+
+I<User> certificates contain the following extensions:
+
+=over
+
+=item nsCertType = client
+
+Marks the certificate as valid for client authentication. This is the old
+Netscape SSL extension, but many things still rely on it.
+
+=item keyUsage = critical, keyEncipherment, keyAgreement, digitalSignature, nonRepudiation, dataEncipherment
+
+Allows the certificate to be used for key negotiation and encryption; creating
+digital signatures; validating the source of signed data; and encrypting data.
+
+=item extendedKeyUsage = clientAuth, codeSigning, emailProtection
+
+Marks the certificate as valid for client authentication, code signing, and
+S/MIME e-mail encryption. This is the newer X.509v3 extension.
+
+=item subjectAltName = @user_altname
+
+Includes the templated [user_altname] extensions section as the X.509v3
+I<subjectAltName>. This extension contains the CA certificate URI and the e-mail
+address provided to the B<--email> option.
+
+=back
+
+=head1 BUGS
+
+Probably. Of particular note is that the default openssl configuration file
+requires the C (country) and O (organisation) fields of all generated
+certificates to match those in the CA certificate, but B<ca-create-cert>
+allows these fields to be changed.
+
+=head1 AVAILABILITY
+
+New releases of the ca-scripts utilities can be found at
+L<the developer's website|http://www.pl0rt.org/code/ca-scripts>.
+A L<git repository|git://git.pl0rt.org/alex/code/ca-scripts>
+for development versions also exists.
+
+=head1 AUTHORS
+
+Copyright 2009, 2010 Alex Bramley a.bramley@gmail.com
+
+=head1 SEE ALSO
+
+ca-init(1), ca-renew-cert(1), ca-revoke-cert(1), ca-scripts.conf(5),
+openssl(1ssl), ca(1ssl), req(1ssl), x509(1ssl), config(5ssl), and
+x509v3_config(5ssl).
 
 =cut
