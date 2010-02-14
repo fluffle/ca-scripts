@@ -78,6 +78,11 @@ I</etc/ca-scripts.conf>.
 Sign the certificate to be valid for I<DAYS> days instead of the default of
 one year.
 
+=item B<-b> I<BITS>, B<--bits> I<BITS>
+
+Generate a I<BITS>-bit certificate instead of a default 2048-bit one.
+Traditionally this is a power of two, e.g. 512, 1024, 2048, 4096.
+
 =item B<-n> I<NAME>, B<--alt-name> I<NAME>
 
 Only valid for I<server> type certificates. Specifies an alternative host

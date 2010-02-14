@@ -26,6 +26,7 @@ Options:
   -f, --config FILE     Use config file instead of $CONFFILE
   -t, --type TYPE       Certificate type: "server", "client" or "user"
   -d, --days DAYS       Certificate is valid for DAYS days instead of 365
+  -b, --bits BITS       Generate a BITS bit certificate instead of 2048
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -r, --csr-only        Only generate CSR, don't sign it
@@ -56,6 +57,7 @@ while :; do
         -f|--config) shift; CONFFILE="$1"; shift;;
         -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
         -d|--days) shift; CA_CRT_DAYS="-days $1"; shift;;
+        -b|--bits) shift; CA_CRT_BITS="$1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
         -r|--csr-only) CSR_ONLY=1; shift;;

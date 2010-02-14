@@ -1,5 +1,5 @@
 [ req ]
-default_bits            = 2048
+default_bits            = %CA_CRT_BITS%
 default_md              = sha1
 distinguished_name      = req_dn
 req_extensions          = req_%CA_CRT_TYPE%_extensions

@@ -90,6 +90,7 @@ CA_DESC         $CA_DN_CN
 CA_CRT_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crt
 CA_CRL_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crl
 CA_PATHLEN      0
+CA_CRT_BITS     2048
 CA_CRT_C        $CA_DN_C
 CA_CRT_ST       $CA_DN_ST
 CA_CRT_L        $CA_DN_L
