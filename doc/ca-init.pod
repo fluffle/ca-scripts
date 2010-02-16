@@ -27,8 +27,10 @@ B<ca-init> [B<-h>] | [B<--help>]
 
 B<ca-init> reads the ca-scripts configuration file and generates an openssl(1)
 configuration file and an X.509 certificate and key suitable for use as an
-x509(1) certificate authority. The format of the ca-scripts configuration file
-is documented in ca-scripts.conf(5).
+x509(1) certificate authority. It can also optionally generate an HTML file
+with MD5 and SHA1 fingerprints suitable for publishing the CA certificate and
+the CRL. The format of the ca-scripts configuration file is documented in
+ca-scripts.conf(5).
 
 =head1 OPTIONS
 
