@@ -1,17 +1,24 @@
 ca-scripts
 ==========
 
-A set of `bash(1)` scripts for working with SSL Certificate Authorities.
+A set of **bash**(1) scripts for working with SSL Certificate Authorities.
 
 These scripts are designed to provide a configurable wrapping layer around
-[openssl](http://www.openssl.org/), similar to CA.pl. They're potentially a
-little heavyweight if you just need a single self-signed certificate to secure
+[**openssl**(1)](http://www.openssl.org/), similar to CA.pl. They're potentially
+a little heavyweight if you just need a single self-signed certificate to secure
 an HTTPs webserver, but they may come in handy if you want to:
 
   * Generate multiple service certificates signed by a single authority
   * Provide signed client certificates to end users for authentication purposes
   * Provide client certificates for S/MIME encrypted e-mail or code signing
   * Easily set extensions such as x509v3 subjectAltName in your certificates
+
+Portability
+-----------
+
+Currently, these scripts are limited to systems with a recent install of
+**openssl**(1), GNU **date**(1) -- sorry BSD folks; patches welcome -- and
+version 3 or greater of **bash**(1).
 
 Installation
 ------------
