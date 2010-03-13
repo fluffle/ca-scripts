@@ -19,8 +19,8 @@ ca-create-cert - generate a signed X.509 SSL certificate
 
 =head1 SYNOPSIS
 
-B<ca-create-cert> -t I<type> [B<-cprsx>] [B<-f> I<config>] [B<-d> I<days>]
-[B<-n> I<name>] [I<options>] <host or user name>
+B<ca-create-cert> [B<-cpqrsx>] [B<-f> I<config>] [B<-t> I<type>] [B<-d> I<days>]
+[B<-b> I<bits>] [B<-n> I<name>] [I<options>] <common name>
 
 B<ca-create-cert> [B<-h>] | [B<--help>]
 
@@ -56,13 +56,14 @@ Prints out a short synopsis of the options to B<ca-create-cert>.
 
 =item B<-t> I<TYPE>, B<--type> I<TYPE>
 
-This argument is mandatory. B<ca-create-cert> can create three types of
-X.509 certificate: I<server>, I<client>, and I<user>. These differ
-in the X.509v3 extensions present in the signed certificate, and in the uses
-the certificate is trusted for. See x509(1ssl) and x509v3_config(5ssl)
-for more details about X.509 extensions, and the B<CERTIFICATE TYPES>
-section of this manual for more details on the exact differences between the
-certificate types.
+B<ca-create-cert> can create three types of X.509 certificate: I<server>,
+I<client>, and I<user>. The type can also be set using the config variable
+B<CA_CRT_TYPE>; it defaults to I<server> in the absence of either the command
+line or config variable being present. Certificate types differ in the X.509v3
+extensions present in the signed certificate, and in the uses the certificate
+is trusted for. See x509(1ssl) and x509v3_config(5ssl) for more details about
+X.509 extensions, and the B<CERTIFICATE TYPES> section of this manual for more
+details on the exact differences between the certificate types.
 
 =item B<-c>, B<--encrypt>
 

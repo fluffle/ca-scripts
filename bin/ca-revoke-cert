@@ -4,12 +4,12 @@
 
 usage() {
     cat <<__EOT__
-Usage: $PROGNAME -t <type> [options] <hostname|username|certpath>
+Usage: $PROGNAME [options] <common name>|<path to certificate>
 
 Options:
   -h, --help            Print this helpful message!
   -f, --config FILE     Use config file instead of $CONFFILE
-  -t, --type            Certificate type: "server", "client" or "user"
+  -t, --type TYPE       Certificate type: "server" (default), "client" or "user"
   -i, --template FILE   Use alternative index.html template
   -o, --output FILE     Generate CA index.html in FILE
 

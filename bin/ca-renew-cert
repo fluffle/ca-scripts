@@ -4,12 +4,12 @@
 
 usage() {
     cat <<__EOT__
-Usage: $PROGNAME -t <type> [options] <hostname|username|certpath>
+Usage: $PROGNAME [options] <common name>|<path to certificate>
 
 Options:
   -h, --help            Print this helpful message!
   -f, --config FILE     Use config file instead of $CONFFILE
-  -t, --type            Certificate type: "server", "client" or "user"
+  -t, --type TYPE       Certificate type: "server" (default), "client" or "user"
   -d, --days DAYS       Renew certificate for DAYS days instead of CA_CRT_DAYS
 
 __EOT__

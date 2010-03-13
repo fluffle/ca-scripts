@@ -19,8 +19,8 @@ ca-revoke-cert - revoke a certificate and re-generate CRL
 
 =head1 SYNOPSIS
 
-B<ca-revoke-cert> -t I<type> [B<-f> I<config>] [B<-i> I<template>]
-[B<-o> I<file>] I<hostname, username, or path to certificate>
+B<ca-revoke-cert> [B<-f> I<config>] [B<-t> I<type>] [B<-l> I<days>]
+[B<-i> I<template>] [B<-o> I<file>] I<common name>|I<path to certificate>
 
 B<ca-revoke-cert> [B<-h>] | [B<--help>]
 
@@ -42,8 +42,9 @@ type.
 
 =item B<-t> I<TYPE>, B<--type> I<TYPE>
 
-This argument is mandatory and tells B<ca-revoke-cert> what type of certificate
-it is revoking, either I<server>, I<client>, or I<user>.
+This argument overrides the type detection if multiple certificate types share
+the same common name, telling B<ca-revoke-cert> what type of certificate it is
+revoking, either I<server>, I<client>, or I<user>.
 
 =item B<-f> I<FILE>, B<--config> I<FILE>
 

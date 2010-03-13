@@ -15,15 +15,13 @@ MAKE_P12=0
 usage() {
     cat <<__EOT__
 Usage:
-  $PROGNAME -t server [options] <hostname>
-  $PROGNAME -t client [options] <hostname>
-  $PROGNAME -t user   [options] <username>
+  $PROGNAME [options] <common name>
 
 Options:
   -h, --help            Print this helpful message!
   -c, --encrypt         Encrypt certificate private key with Triple-DES
   -f, --config FILE     Use config file instead of $CONFFILE
-  -t, --type TYPE       Certificate type: "server", "client" or "user"
+  -t, --type TYPE       Certificate type: "server" (default), "client" or "user"
   -d, --days DAYS       Certificate valid for DAYS days instead of CA_CRT_DAYS
   -b, --bits BITS       Generate a BITS bit certificate instead of CA_CRT_BITS
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)

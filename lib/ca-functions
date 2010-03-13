@@ -73,9 +73,8 @@ __TESTS__
     fi
     
     case "$CA_CRT_TYPE" in
-        server|client|user|ca) :;;
-        '') error "The type option is mandatory!";;
-        *) error "Unrecognised type '$CA_CRT_TYPE'!";;
+        server|client|user) :;;
+        *) error "Unrecognised certificate type '$CA_CRT_TYPE'!";;
     esac
 
     # we need to do these first to use them in other default defs
@@ -92,6 +91,7 @@ CA_CRL_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crl
 CA_PATHLEN      0
 CA_CRT_DAYS     365
 CA_CRT_BITS     2048
+CA_CRT_TYPE     server
 CA_CRT_C        $CA_DN_C
 CA_CRT_ST       $CA_DN_ST
 CA_CRT_L        $CA_DN_L
@@ -163,19 +163,33 @@ ca_cnf_name() {
       # tr(1) regex didn't work in the gsub() call above.
 }
 
+ca_cnf_type() {
+    local crt
+    # XXX: dirty hack -- derive type from filename being *.TYPE.crt
+    crt="${1%.crt}"
+    crt="${crt##*.}"
+    case "$crt" in
+        server|client|user) echo "$crt";;
+        *) echo $CA_CRT_TYPE;;
+    esac
+}
+
 ca_find_cnf() {
-    local name _name
+    local name _name _type
     name="$1"
 
     if [ -f "$name" ]; then
-        if ! grep -q "$CA_CRT_TYPE" <<<"$name"; then
-            error "Certificate '$name' does not appear to be of type '$CA_CRT_TYPE'"
+        _name="$(ca_cnf_name $name)"
+        _type="$(ca_cnf_type $name)"
+        if [ $(basename "$name" .crt) = "${_name}.${_type}" ]; then
+            echo "${_name}.${_type}"
+            return
         else
-            echo "$(ca_cnf_name $name).$CA_CRT_TYPE"
+            error "Unable to derive config details from certificate '$name'."
         fi
-        return
     fi
     
+    # XXX: this stil doesn't handle default types. FIXME when it's not 1am.
     _name=$( echo -n "$name" | tr -c '[:alnum:]@-' _ )
     if [ "$CA_CRT_TYPE" = "user" ]; then 
         # user names may have dots etc. in, so use munged version in match
