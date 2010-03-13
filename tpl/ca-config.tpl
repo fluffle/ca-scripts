@@ -9,7 +9,7 @@ default_ca = ca_scripts
 # This defines our CA configuration
 [ ca_scripts ]
 # interpolation variables defining the directories to use
-dir             = %CA_HOME%                     # root data directory of CA 
+dir             = %CA_HOME%                     # root data directory of CA
 db_dir          = $dir/db                       # database files are kept here
 csr_dir         = $dir/csr                      # generated CSRs are kept here
 crt_dir         = $dir/crt                      # signed CRTs are kept here
@@ -27,7 +27,7 @@ RANDFILE        = $db_dir/.rand                 # private random number file
 
 # these two CA directives can be commented out so that v1 CRLs are created
 crlnumber       = $db_dir/crlnumber             # crlnumber index file
-crl_extensions  = ca_crl_extensions             # extensions in v2 CRL 
+crl_extensions  = ca_crl_extensions             # extensions in v2 CRL
 
 # x509v3 certificate extensions and certificate signing policy
 x509_extensions = ca_x509_default_extensions
@@ -36,7 +36,7 @@ policy          = ca_extension_policy           # policy on required CSR attribu
 
 # leave these defaults
 name_opt        = oneline               # Subject Name options - x509(1)
-cert_opt        = ca_default            # Certificate field options - x509(1) 
+cert_opt        = ca_default            # Certificate field options - x509(1)
 default_days    = %CA_CRT_DAYS%         # how long to certify for
 default_crl_days= %CA_CRL_DAYS%         # how long before next CRL
 default_md      = sha1                  # which md to use.
@@ -55,7 +55,7 @@ email_in_dn     = no                    # remove email from CSR DN when signing
 #   the server common name [CN] to be supplied in the CSR
 # ... and an [emailAddress] may optionally be supplied in the CSR
 # XXX: is this too restrictive or not restrictive enough?
-#      should options for ca-create-cert to change "match" values even exist? 
+#      should options for ca-create-cert to change "match" values even exist?
 [ ca_extension_policy ]
 countryName             = match
 stateOrProvinceName     = supplied

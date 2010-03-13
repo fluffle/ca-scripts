@@ -16,7 +16,7 @@ Options:
 
 __EOT__
 }
-  
+
 short="hf:t:l:i:o:"
 long="help,config:,type:,crl-days:,template:,output:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )

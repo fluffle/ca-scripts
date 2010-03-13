@@ -13,7 +13,7 @@ P { width: 700px; margin-left: 100px; }
 <BODY>
 <H1>%CA_DESC%</H1>
 <H3>CA Certificate</H3>
-<P>The CA certificate can be found 
+<P>The CA certificate can be found
 <A href="%CA_CRT_URI%">here</A></P>
 <P>MD5 Fingerprint: %CA_CRT_MD5_FP%</P>
 <P>SHA1 Fingerprint: %CA_CRT_SHA_FP%</P>

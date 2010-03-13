@@ -9,7 +9,7 @@ CSR_ONLY=0
 CRT_ONLY=0
 MAKE_P12=0
 
-# XXX: in the ca_extension_policy section of ca-config.tpl it states that the 
+# XXX: in the ca_extension_policy section of ca-config.tpl it states that the
 #      C= and O= DN values in a CSR have to match those of the CA
 #      should we have options here to change them when it will cause breakage?
 usage() {
@@ -83,7 +83,7 @@ ca_load_conf
 CA_CRT_CN="$1"
 
 # parameter checking fun -- we need a type and a cn (either user or host name)
-if [ -z "$CA_CRT_CN" ]; then 
+if [ -z "$CA_CRT_CN" ]; then
     error "The host or username parameter is mandatory!"
 fi
 

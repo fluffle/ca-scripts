@@ -27,7 +27,7 @@ B<ca-renew-cert> [B<-h>] | [B<--help>]
 =head1 DESCRIPTION
 
 B<ca-renew-cert> renews certificates generated with ca-create-cert(1),
-extending their validity for a configurable number of days, defaulting to 
+extending their validity for a configurable number of days, defaulting to
 B<CA_CRT_DAYS>.
 
 =head1 OPTIONS
@@ -62,14 +62,14 @@ B<CA_CRT_DAYS> set in the configuration file.
 B<ca-renew-cert> is currently very careful to re-use the original key and
 certificate serial when it renews a certificate. This is not strictly necessary
 for most renewals, and may in fact reduce the long-term security of your SSL
-certificates. 
+certificates.
 
 The usual renewal process is to re-generate a new CSR and private
 key with the same DN and sign it as valid for the required time period.
 This has the unfortunate side-effect of rendering unreadable all S/MIME e-mail
 and data encrypted with the previous certificate and private key. It will also
-invalidate any old digital signatures created with the previous certificate. 
-Instead, B<ca-renew-cert> re-signs the old CSR with the same serial and a new 
+invalidate any old digital signatures created with the previous certificate.
+Instead, B<ca-renew-cert> re-signs the old CSR with the same serial and a new
 validity period, which ensures that no data is lost.
 
 Arguably, it would be better to support both modes of renewal, and re-generate

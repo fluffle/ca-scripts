@@ -42,7 +42,7 @@ created. This configuration file sets up some templating variables that will
 be present in certificates created for this CA, such as the domain, CA name,
 and the root directory which will be populated with the generated certificates.
 An example configuration file is provided with the scripts, and the comments
-should be self-explanatory. 
+should be self-explanatory.
 
   By default the CA scripts will read `/etc/ca-scripts.conf`. This is fine for
 creating a single CA serving a single domain with no intermediary certificates,
@@ -68,7 +68,7 @@ going to need to read the following:
   * [**ca**(1ssl)](http://www.openssl.org/docs/apps/ca.html)
   * [**req**(1ssl)](http://www.openssl.org/docs/apps/req.html)
   * [**x509**(1ssl)](http://www.openssl.org/docs/apps/x509.html)
-  * [**config**(5ssl)](http://www.openssl.org/docs/apps/config.html) 
+  * [**config**(5ssl)](http://www.openssl.org/docs/apps/config.html)
   * [**x509v3\_config**(5ssl)](http://www.openssl.org/docs/apps/x509v3_config.html)
 
 Particularly important are the x509v3 extensions present in the certificate,
@@ -77,31 +77,33 @@ which are defined in the "ca\_x509\_extensions" section of the config file.
 Creating a certificate
 ----------------------
 
-  The **ca-create-cert**(1) script can generate three "types" of certificate: 
+  The **ca-create-cert**(1) script can generate three "types" of certificate:
 *server* certificates for securing a service with SSL/TLS; *client* certificates
 for authenticating a client to these services; and *user* certificates for
 authentication, S/MIME e-mail signing or encryption, and code signing. There
 are minor but important differences in the key usage extensions present in
 these different certificate types, details can be found in the documentation
-for **ca-create-cert**(1).
+for **ca-create-cert**(1). In each case, a Common Name must be provided to give
+a unique name for the certificate.
 
-  **ca-create-cert**(1) takes a number of options to customise the generated 
-certificate. The *--type* option is mandatory, and for *server* certs it is very
-likely that the *--alt-name* option will be useful to set X.509v3 subjectAltName
-DNS records for other hostnames for the server. Both the server hostname and
-any alternative names will be fully-qualified to **CA\_DOMAIN** if they do not
-contain any dots, but if unqualified names are passed in they are also
-preserved as alternative DNS names in the certificate. The private key may be
-encrypted with 3DES, and optionally the certificate, key, and CA certificate
-can be bundled together into a PKCS#12 format certificate archive. By default
-certificates are valid for 365 days from signing, but this may be changed with
-the *--days* option.
+  **ca-create-cert**(1) takes a number of options to customise the generated
+certificate. The **--type** option defaults to creating *server* certs. It is
+likely that the **--alt-name** option (which sets X.509v3 subjectAltName DNS
+records for other hostnames for the server) will be useful; it may also be used
+when creating *client* certs.  Both the server hostname and any alternative
+names will be fully-qualified to **CA\_DOMAIN** if they do not contain any dots
+unless the **--no-qualify** option is used. If unqualified names are passed in
+they are preserved as alternative DNS names in the certificate. The private key
+may be encrypted with 3DES using the **--encrypt** option, and the certificate,
+key, and CA certificate can be bundled together into a PKCS#12 format
+certificate archive by passing **--pkcs12**. By default certificates are valid
+for 365 days from signing, but this may be changed with the **--days** option.
 
   The certificate's DN can be completely changed from the defaults provided by
 **ca-scripts.conf**(5), but be wary as by default the generated openssl config
 file requires that the country (C) and organisation (O) fields match those of
 the CA certificate. A comment may also be set that will show up in user browsers
-when they click on their padlock icons to examine the certificate's properties. 
+when they click on their padlock icons to examine the certificate's properties.
 As  with the CA setup, the steps to generate the certificate can be split up so
 that configurations that are created from templates can be edited beforehand.
 
@@ -122,20 +124,19 @@ signed. In the future it is possible (even likely) that this renewal method
 will only be used on *user* type certificates, and the *server* and *client*
 types will be renewed normally. If the current renewal method doesn't provide
 sufficient security, the current certificate should be revoked and a new one
-generated that is valid for the correct period of time using the *--days* option
-to **ca-create-cert**(1).
+generated that is valid for the correct period of time using the **--days**
+option to **ca-create-cert**(1).
 
-  As with the certificate creation script the *--type* option is mandatory for
-**ca-renew-cert**(1), but the argument may be either a hostname, a username or a
-path to a certificate. Internally this will be resolved to the correct
-information required for certificate renewal.
+  As with the certificate creation script a Common Name can be passed to
+identify the certificate to renew; alternatively the path to a previously
+created certificate can be given. Internally these will be both be resolved to
+the correct information required for certificate renewal.
 
 Revoking a certificate
 ----------------------
 
   To revoke a certificate and re-generate the CA certficate revocation list in
-both PEM and DER encodings, invoke **ca-revoke-cert**(1), again providing the
-*--type* option and either the hostname, username or the path to the certificate
-to be revoked. Along with **ca-init**(1) this script can optionally generate a
-basic HTML template to serve the CA certificate and CRL with verifiable MD5 and
-SHA1 checksums.
+both PEM and DER encodings, invoke **ca-revoke-cert**(1), again providing a
+Common Name or the path to the certificate to be revoked. Along with
+**ca-init**(1) this script can optionally generate a basic HTML template to
+serve the CA certificate and CRL with verifiable MD5 and SHA1 checksums.

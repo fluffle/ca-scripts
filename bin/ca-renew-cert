@@ -56,9 +56,9 @@ ENDDATE=$( openssl x509 -in "$CRT" -noout -enddate | cut -d= -f2 )
 SERIAL=$( openssl x509 -in "$CRT" -noout -serial | cut -d= -f2 )
 # work out new expiry date based on expiry date of current cert
 # these dates are "<year> <day of year>"
-export TZ=UTC 
+export TZ=UTC
 NOWYEAR=$( date +%Y )
-NOWDAYS=$( date +%j ) 
+NOWDAYS=$( date +%j )
 # XXX: this only works with GNU date, BSD portability fail.
 ENDYEAR=$( date +%Y -d "$ENDDATE + $CA_CRT_DAYS days" )
 ENDDAYS=$( date +%j -d "$ENDDATE + $CA_CRT_DAYS days" )

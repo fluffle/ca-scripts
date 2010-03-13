@@ -39,7 +39,7 @@ ca_override_conf() {
 
 ca_set_default() {
     local varname vardef
-    
+
     varname="$1"
     vardef="$2"
     eval "if [ -z \"\$$varname\" ]; then
@@ -58,7 +58,7 @@ ca_load_conf() {
         CONFFILE="./$CONFFILE"
     fi
     . "$CONFFILE"
-    
+
     error=""
     while read vartest varname; do
         varerr=$( ca_check_var "$varname" "$vartest" )
@@ -78,7 +78,7 @@ __TESTS__
     if [ -n "$error" ]; then
         error "Parsing config file $CONFFILE failed:\n$error"
     fi
-    
+
     # check user-provided variables and copy them to CA_ namespace to override
     # any defaults that have potentially been set in configuration file
     # XXX: this is getting really dirty now, perhaps find an alternative?
@@ -131,7 +131,7 @@ ca_sed_cmd() {
 ca_template() {
     local template dest
 
-    if [ -r "$1" ]; then 
+    if [ -r "$1" ]; then
         template="$1"
     elif [ -r "$SHAREDIR/$1.tpl" ]; then
         template="$SHAREDIR/$1.tpl"
@@ -175,7 +175,7 @@ ca_cnf_name() {
     crt="$1"
     # work out what configuration files we should be using from the cert's CN
     echo $( openssl x509 -in "$crt" -noout -nameopt sep_multiline,use_quote \
-      -subject | awk -F= '/CN=/{ gsub("[^A-Za-z0-9@-]", "_", $2); print $2}' ) 
+      -subject | awk -F= '/CN=/{ gsub("[^A-Za-z0-9@-]", "_", $2); print $2}' )
       #          grep "CN=" | cut -d= -f2 | tr -c '[:alnum:]@-' _ )
       # originally did this like the above but tried awk instead. awk(1) seems
       # to lie about it's egrep(1) support though as no matter what I tried the
@@ -207,10 +207,10 @@ ca_find_cnf() {
             error "Unable to derive config details from certificate '$name'."
         fi
     fi
-    
+
     # XXX: this stil doesn't handle default types. FIXME when it's not 1am.
     _name=$( echo -n "$name" | tr -c '[:alnum:]@-' _ )
-    if [ "$CA_CRT_TYPE" = "user" ]; then 
+    if [ "$CA_CRT_TYPE" = "user" ]; then
         # user names may have dots etc. in, so use munged version in match
         # check if name is "user@domain", append $CA_DOMAIN if not
         if [ "${_name%%@*}" = "$_name" \
