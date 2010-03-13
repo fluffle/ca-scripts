@@ -30,13 +30,20 @@ ca_check_var() {
           fi"
 }
 
+ca_override_conf() {
+    local varname
+
+    varname="${1#USER_}"
+    eval "$varname=\"\$USER_$varname\""
+}
+
 ca_set_default() {
     local varname vardef
     
     varname="$1"
     vardef="$2"
     eval "if [ -z \"\$$varname\" ]; then
-              $varname=\"$vardef\";
+              $varname=\"$vardef\"
           fi"
 }
 
@@ -72,6 +79,14 @@ __TESTS__
         error "Parsing config file $CONFFILE failed:\n$error"
     fi
     
+    # check user-provided variables and copy them to CA_ namespace to override
+    # any defaults that have potentially been set in configuration file
+    # XXX: this is getting really dirty now, perhaps find an alternative?
+    set | awk -F\= '/^USER_CA_[A-Z_]*=/{print $1}' | while read user_var; do
+        ca_override_conf "$user_var"
+    done
+
+    # XXX: and this alternative should probably have better validation ;-)
     case "$CA_CRT_TYPE" in
         server|client|user) :;;
         *) error "Unrecognised certificate type '$CA_CRT_TYPE'!";;

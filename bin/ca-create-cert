@@ -53,30 +53,33 @@ while :; do
         -h|--help) usage; exit 0;;
         -c|--encrypt) CRYPTKEY=""; shift;;
         -f|--config) shift; CONFFILE="$1"; shift;;
-        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
-        -d|--days) shift; CA_CRT_DAYS="$1"; shift;;
-        -b|--bits) shift; CA_CRT_BITS="$1"; shift;;
+        -t|--type) shift; USER_CA_CRT_TYPE="$1"; shift;;
+        -d|--days) shift; USER_CA_CRT_DAYS="$1"; shift;;
+        -b|--bits) shift; USER_CA_CRT_BITS="$1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
         -q|--no-qualify) QUALIFY=0; shift;;
         -r|--csr-only) CSR_ONLY=1; shift;;
         -s|--crt-only) CRT_ONLY=1; shift;;
         -x|--cnf-only) CNF_ONLY=1; shift;;
-        --country) shift; CA_CRT_C="$1"; shift;;
-        --state) shift; CA_CRT_ST="$1"; shift;;
-        --location) shift; CA_CRT_L="$1"; shift;;
-        --org) shift; CA_CRT_O="$1"; shift;;
-        --ounit) shift; CA_CRT_OU="$1"; shift;;
-        --email) shift; CA_CRT_E="$1"; shift;;
-        --comment) shift; CA_CRT_COMMENT="$1"; shift;;
+        --country) shift; USER_CA_CRT_C="$1"; shift;;
+        --state) shift; USER_CA_CRT_ST="$1"; shift;;
+        --location) shift; USER_CA_CRT_L="$1"; shift;;
+        --org) shift; USER_CA_CRT_O="$1"; shift;;
+        --ounit) shift; USER_CA_CRT_OU="$1"; shift;;
+        --email) shift; USER_CA_CRT_E="$1"; shift;;
+        --comment) shift; USER_CA_CRT_COMMENT="$1"; shift;;
         --) shift; break;;
         *) echo "Unknown value '$1'"; exit 1;;
     esac
 done
-CA_CRT_CN="$1";
 
 # load up the configuration file
 ca_load_conf
+
+# This must be provided on the command line. There's no point setting a
+# "default" certificate CN in the config, it should be different every time.
+CA_CRT_CN="$1"
 
 # parameter checking fun -- we need a type and a cn (either user or host name)
 if [ -z "$CA_CRT_CN" ]; then 

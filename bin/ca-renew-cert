@@ -15,8 +15,8 @@ Options:
 __EOT__
 }
 
-short='hf:t:'
-long='help,config:,type:'
+short="hf:t:d:"
+long="help,config:,type:,days:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
@@ -25,18 +25,16 @@ while :; do
     case "$1" in
         -h|--help) usage; exit 0;;
         -f|--config) shift; CONFFILE="$1"; shift;;
-        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
-        -d|--days) shift; CA_CRT_DAYS="$1"; shift;;
+        -t|--type) shift; USER_CA_CRT_TYPE="$1"; shift;;
+        -d|--days) shift; USER_CA_CRT_DAYS="$1"; shift;;
         --) shift; break;;
         *) echo "Unknown value '$1'"; exit 1;;
     esac
 done
 
-CNF_NAME="$1"
-
 ca_load_conf
 
-CNF_NAME=$( ca_find_cnf "$CNF_NAME" )
+CNF_NAME=$( ca_find_cnf "$1" )
 CRT="$CA_HOME/crt/$CNF_NAME.crt"
 
 # make sure that configuration files are present as expected

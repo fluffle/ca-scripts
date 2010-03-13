@@ -26,18 +26,17 @@ while :; do
     case "$1" in
         -h|--help) usage; exit 0;;
         -f|--config) shift; CONFFILE="$1"; shift;;
-        -t|--type) shift; CA_CRT_TYPE="$1"; shift;;
+        -t|--type) shift; USER_CA_CRT_TYPE="$1"; shift;;
         -i|--template) shift; INDEXTPL="$1"; shift;;
         -o|--output) shift; INDEXOUT="$1"; shift;;
         --) shift; break;;
         *) echo "Unknown value '$1'"; exit 1;;
     esac
 done
-CNF_NAME="$1"
 
 ca_load_conf
 
-CNF_NAME=$( ca_find_cnf "$CNF_NAME" "$TYPE" )
+CNF_NAME=$( ca_find_cnf "$1" )
 CRT="$CA_HOME/crt/$CNF_NAME.crt"
 
 openssl ca -config $CA_HOME/cnf/$CA_NAME.ca.cnf \

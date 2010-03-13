@@ -2,6 +2,17 @@
 
 . "/home/alex/code/ca-scripts/lib/ca-functions"
 
+# XXX: Add an interactive mode to this script to obviate the need for a
+# pre-existing config file? e.g.
+#    $ cd /empty/directory or /dir/containing/partial/conf
+#    $ ca-init -i
+# or maybe:
+#    $ ca-init -i /path/to/CA_HOME
+# + modify config file loading to check current directory too?
+
+# XXX: corollary to above: provide --long-options for all config file
+# variables also, reducing or eliminating *requirement* for config file?
+
 usage() {
     cat <<__EOT__
 Usage: $PROGNAME [options]
@@ -39,7 +50,6 @@ while :; do
 done
 
 # load up the configuration file
-CA_CRT_TYPE="ca"
 ca_load_conf
 
 if [ 1 -eq "$CRT_ONLY" -a 1 -eq "$CNF_ONLY" ]; then
