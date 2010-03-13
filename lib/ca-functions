@@ -101,10 +101,12 @@ __TESTS__
         ca_set_default "$varname" "$vardef"
     done <<__DEFAULTS__
 CA_DESC         $CA_DN_CN
+CA_DAYS         3652
+CA_PATHLEN      0
 CA_CRT_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crt
 CA_CRL_URI      http://$CA_DOMAIN/ca/$CA_NAME.ca.crl
-CA_PATHLEN      0
 CA_CRT_DAYS     365
+CA_CRL_DAYS     365
 CA_CRT_BITS     2048
 CA_CRT_TYPE     server
 CA_CRT_C        $CA_DN_C
@@ -140,8 +142,8 @@ ca_template() {
 }
 
 ca_gen_crl() {
-    openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
-      -gencrl -out "$CA_HOME/crl/$CA_NAME.ca.crl" -md sha1
+    openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" -gencrl -md sha1 \
+      -crldays "$CA_CRL_DAYS" -out "$CA_HOME/crl/$CA_NAME.ca.crl"
     openssl crl -in "$CA_HOME/crl/$CA_NAME.ca.crl" \
       -out "$CA_HOME/crl/$CA_NAME.ca.crl.der" -outform DER
 }

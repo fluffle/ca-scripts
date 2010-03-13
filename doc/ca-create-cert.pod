@@ -105,22 +105,22 @@ I<subjectAltName> extension in this case. User names are treated as unqualified
 if they do not contain an "@" symbol and are qualified to I<common
 name>@B<CA_DOMAIN>.
 
-=item B<-r>, B<--csr-only>
+=item B<-r>, B<--req-only>
 
 Causes B<ca-create-cert> to generate just the X.509 certificate signing
 request (CSR) from a pre-existing openssl request configuration, without
 signing it to create a valid certificate. When used in conjunction with
 B<--cnf-only>, B<ca-create-cert> only generates the openssl request
 configuration, allowing the user to modify it before creating the CSR.
-Mutually exclusive to B<--crt-only>.
+Mutually exclusive to B<--sign-only>.
 
-=item B<-s>, B<--crt-only>
+=item B<-s>, B<--sign-only>
 
 Causes B<ca-create-cert> to sign a pre-existing CSR using a pre-existing
 X.509 extensions configuration, creating a valid certificate. When used in
 conjunction with B<--cnf-only>, B<ca-create-cert> only generates the
 X.509 extensions configuration, allowing the user to modify it before signing
-the certificate. Mutually exclusive to B<--csr-only>.
+the certificate. Mutually exclusive to B<--req-only>.
 
 =item B<-x>, B<--cnf-only>
 

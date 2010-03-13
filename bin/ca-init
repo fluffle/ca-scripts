@@ -21,16 +21,20 @@ Options:
   -h, --help            Print this helpful message!
   -c, --encrypt         Encrypt CA private key with Triple-DES
   -f, --config FILE     Use config file instead of $CONFFILE
+  -d, --days DAYS       CA Certificate valid for DAYS days instead of CA_DAYS
+  -l, --crl-days DAYS   Make CRL valid for DAYS days instead of CA_CRL_DAYS
+  -b, --bits BITS       Generate a BITS bit certificate instead of CA_CRT_BITS
   -i, --template FILE   Use alternative index.html template
   -o, --output FILE     Generate CA index.html in FILE
-  -s, --crt-only        Only generate CA cert/key, use pre-created config
+  -s, --sign-only       Only generate CA cert/key, use pre-created config
   -x, --cnf-only        Only generate CA config file, don't create CA cert/key
 
 __EOT__
 }
 
-short='hcf:i:o:sx'
-long='help,encrypt,config:,template:,output:,crt-only,cnf-only'
+short="hcf:d:l:b:i:o:sx"
+long="help,encrypt,config:,days:,crl-days:,bits:"
+long="$long,template:,output:,sign-only,cnf-only"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
@@ -40,9 +44,12 @@ while :; do
         -h|--help) usage; exit 0;;
         -c|--encrypt) CRYPTKEY=""; shift;;
         -f|--config) shift; CONFFILE="$1"; shift;;
+        -d|--days) shift; USER_CA_DAYS="$1"; shift;;
+        -l|--crl-days) shift; USER_CA_CRL_DAYS="$1"; shift;;
+        -b|--bits) shift; USER_CA_CRT_BITS="$1"; shift;;
         -i|--template) shift; INDEXTPL="$1"; shift;;
         -o|--output) shift; INDEXOUT="$1"; shift;;
-        -s|--crt-only) CRT_ONLY=1; shift;;
+        -s|--sign-only) CRT_ONLY=1; shift;;
         -x|--cnf-only) CNF_ONLY=1; shift;;
         --) shift; break;;
         *) echo "Unknown value '$1'"; exit 1;;
@@ -83,7 +90,7 @@ if [ 1 -ne "$CNF_ONLY" ]; then
       -out    "$CA_HOME/csr/$CA_NAME.ca.csr"
     chmod 400 "$CA_HOME/key/$CA_NAME.ca.key"
 
-    openssl ca -create_serial -selfsign -days 3652 -batch \
+    openssl ca -create_serial -selfsign -days "$CA_DAYS" -batch \
       -name ca_scripts -extensions ca_x509_extensions \
       -config  "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
       -in      "$CA_HOME/csr/$CA_NAME.ca.csr" \

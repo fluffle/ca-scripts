@@ -19,7 +19,8 @@ ca-init - initialise an X.509 SSL CA and generate CA certificate
 
 =head1 SYNOPSIS
 
-B<ca-init> [B<-csx>] [B<-f> I<config>] [B<-i> I<template>] [B<-o> I<output>]
+B<ca-init> [B<-csx>] [B<-f> I<config>] [B<-d> I<days>] [B<-l> I<days>]
+[B<-b> I<bits>] [B<-i> I<template>] [B<-o> I<output>]
 
 B<ca-init> [B<-h>] | [B<--help>]
 
@@ -49,6 +50,21 @@ Encrypt the private key generated for the certificate authority with 3DES.
 Load the ca-scripts configuration from I<FILE> instead of
 I</etc/ca-scripts.conf>.
 
+=item B<-d> I<DAYS>, B<--days> I<DAYS>
+
+Sign the CA certificate to be valid for I<DAYS> days instead of the default
+B<CA_DAYS> set in the configuration file.
+
+=item B<-l> I<DAYS>, B<--crl-days> I<DAYS>
+
+Generate a CRL that is valid for I<DAYS> days instead of the default
+B<CA_CRL_DAYS> set in the configuration file.
+
+=item B<-b> I<BITS>, B<--bits> I<BITS>
+
+Generate a I<BITS>-bit CA certificate instead of the default B<CA_CRT_BITS> set
+in the config file. Traditionally this is a power of two, e.g. 1024 or 2048.
+
 =item B<-i> I<FILE>, B<--template> I<FILE>
 
 Use the index.html template in I<FILE> rather than the standard one provided
@@ -61,7 +77,7 @@ Generate a HTML page in I<FILE> suitable for serving your CA certificate and
 revocation lists via HTTP. The default template is basic but provides MD5 and
 SHA1 fingerprints of both files for verification purposes.
 
-=item B<-s>, B<--crt-only>
+=item B<-s>, B<--sign-only>
 
 Generate the CA certificate and private key from a previously-created openssl
 configuration. May only be used after having run B<ca-init> with the
@@ -71,8 +87,8 @@ B<--cnf-only> option, and mutually exclusive to that option.
 
 Create initial CA directory structure and openssl configuration, but do not
 generate CA certificate and private key. Using this option in conjunction with
-B<--crt-only> allows the user to manually customise the openssl config
-before generating the certificates. Mutually exclusive to B<--crt-only>.
+B<--sign-only> allows the user to manually customise the openssl config
+before generating the certificates. Mutually exclusive to B<--sign-only>.
 
 =back
 

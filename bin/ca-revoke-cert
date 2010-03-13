@@ -10,14 +10,15 @@ Options:
   -h, --help            Print this helpful message!
   -f, --config FILE     Use config file instead of $CONFFILE
   -t, --type TYPE       Certificate type: "server" (default), "client" or "user"
+  -l, --crl-days DAYS   Make CRL valid for DAYS days instead of CA_CRL_DAYS
   -i, --template FILE   Use alternative index.html template
   -o, --output FILE     Generate CA index.html in FILE
 
 __EOT__
 }
   
-short='hf:t:i:o:'
-long='help,config:,type:,template:,output:'
+short="hf:t:l:i:o:"
+long="help,config:,type:,crl-days:,template:,output:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
@@ -27,6 +28,7 @@ while :; do
         -h|--help) usage; exit 0;;
         -f|--config) shift; CONFFILE="$1"; shift;;
         -t|--type) shift; USER_CA_CRT_TYPE="$1"; shift;;
+        -l|--crl-days) shift; USER_CA_CRL_DAYS="$1"; shift;;
         -i|--template) shift; INDEXTPL="$1"; shift;;
         -o|--output) shift; INDEXOUT="$1"; shift;;
         --) shift; break;;

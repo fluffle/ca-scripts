@@ -27,8 +27,8 @@ Options:
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -q, --no-qualify      Don't qualify short (dotless) names with CA_DOMAIN
-  -r, --csr-only        Only generate CSR, don't sign it
-  -s, --crt-only        Only sign certificate, requires CSR in place
+  -r, --req-only        Only generate CSR, don't sign it
+  -s, --sign-only       Only sign certificate, requires CSR in place
   -x, --cnf-only        Only generate templates, do not create CSR or sign CRT
   --country             Certificate DN -- C
   --state               Certificate DN -- ST
@@ -41,8 +41,9 @@ Options:
 __EOT__
 }
 
-short='hcf:t:n:prsx'
-long='help,encrypt,config:,type:,alt-name:,pkcs12,csr-only,crt-only,cnf-only'
+short="hcf:t:d:b:n:pqrsx"
+long="help,encrypt,config:,type:,days:,bits:,alt-name:"
+long="$long,pkcs12,no-qualify,req-only,sign-only,cnf-only"
 long="$long,country:,state:,loc:,org:,ounit:,email:,comment:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
@@ -59,8 +60,8 @@ while :; do
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
         -q|--no-qualify) QUALIFY=0; shift;;
-        -r|--csr-only) CSR_ONLY=1; shift;;
-        -s|--crt-only) CRT_ONLY=1; shift;;
+        -r|--req-only) CSR_ONLY=1; shift;;
+        -s|--sign-only) CRT_ONLY=1; shift;;
         -x|--cnf-only) CNF_ONLY=1; shift;;
         --country) shift; USER_CA_CRT_C="$1"; shift;;
         --state) shift; USER_CA_CRT_ST="$1"; shift;;

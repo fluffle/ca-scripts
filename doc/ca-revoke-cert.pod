@@ -51,6 +51,11 @@ revoking, either I<server>, I<client>, or I<user>.
 Load the ca-scripts configuration from I<FILE> instead of
 I</etc/ca-scripts.conf>.
 
+=item B<-l> I<DAYS>, B<--crl-days> I<DAYS>
+
+Generate a CRL that is valid for I<DAYS> days instead of the default
+B<CA_CRL_DAYS> set in the configuration file.
+
 =item B<-i> I<FILE>, B<--template> I<FILE>
 
 Use the index.html template in I<FILE> rather than the standard one provided
@@ -72,6 +77,11 @@ this may change in future releases along with code to deal with key compromise.
 Additionally, the CRLv2 extension I<issuingDistributionPoint> is not yet set in
 generated CRLs due to requiring a very recent version of openssl(1).
 
+These scripts will not handle configuring an OCSP server for you. OCSP is an
+alternative method of checking the validity of X.509 certificates, and is
+Worth Investigating. See ocsp(1ssl) and the
+L<wikipedia entry|http://en.wikipedia.org/wiki/OCSP> for details.
+
 =head1 AVAILABILITY
 
 New releases of the ca-scripts utilities can be found at
@@ -86,8 +96,7 @@ Copyright 2009, 2010 Alex Bramley a.bramley@gmail.com
 =head1 SEE ALSO
 
 ca-init(1), ca-create-cert(1), ca-renew-cert(1), ca-scripts.conf(5),
-openssl(1ssl), ca(1ssl), req(1ssl), x509(1ssl), config(5ssl), and
-x509v3_config(5ssl).
+openssl(1ssl), ca(1ssl), x509(1ssl), and ocsp(1ssl).
 
 =cut
 
