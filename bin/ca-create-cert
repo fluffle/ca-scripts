@@ -3,6 +3,7 @@
 . "/home/alex/code/ca-scripts/lib/ca-functions"
 
 ALT_NAMES=()
+QUALIFY=1
 CNF_ONLY=0
 CSR_ONLY=0
 CRT_ONLY=0
@@ -11,8 +12,6 @@ MAKE_P12=0
 # XXX: in the ca_extension_policy section of ca-config.tpl it states that the 
 #      C= and O= DN values in a CSR have to match those of the CA
 #      should we have options here to change them when it will cause breakage?
-# XXX: Should we provide a -q option to disable the automatic qualification of
-#      host and user names with CA_DOMAIN? It might irritate people...
 usage() {
     cat <<__EOT__
 Usage:
@@ -29,6 +28,7 @@ Options:
   -b, --bits BITS       Generate a BITS bit certificate instead of CA_CRT_BITS
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
+  -q, --no-qualify      Don't qualify short (dotless) names with CA_DOMAIN
   -r, --csr-only        Only generate CSR, don't sign it
   -s, --crt-only        Only sign certificate, requires CSR in place
   -x, --cnf-only        Only generate templates, do not create CSR or sign CRT
@@ -60,6 +60,7 @@ while :; do
         -b|--bits) shift; CA_CRT_BITS="$1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
+        -q|--no-qualify) QUALIFY=0; shift;;
         -r|--csr-only) CSR_ONLY=1; shift;;
         -s|--crt-only) CRT_ONLY=1; shift;;
         -x|--cnf-only) CNF_ONLY=1; shift;;
@@ -89,13 +90,13 @@ if [ 1 -eq "$CSR_ONLY" -a 1 -eq "$CRT_ONLY" ]; then
 fi
 
 if [ "$CA_CRT_TYPE" = "user" ]; then
-    # append @$CA_DOMAIN to user CN if it's not already there
-    if [ "${CA_CRT_CN%%@*}" = "$CA_CRT_CN" ]; then
+    # append @$CA_DOMAIN to user CN if it's not already there and -q not set
+    if [ 1 -eq "$QUALIFY" -a "${CA_CRT_CN%%@*}" = "$CA_CRT_CN" ]; then
         CA_CRT_CN="$CA_CRT_CN@$CA_DOMAIN";
     fi
 else
     # fully qualify server or client CN with $CA_DOMAIN if it's not already
-    if [ "${CA_CRT_CN%%.*}" = "$CA_CRT_CN" ]; then
+    if [ 1 -eq "$QUALIFY" -a "${CA_CRT_CN%%.*}" = "$CA_CRT_CN" ]; then
         # however we may also want the unqualified one as an alt-name
         ALT_NAMES+=("$CA_CRT_CN")
         CA_CRT_CN="$CA_CRT_CN.$CA_DOMAIN"
@@ -112,14 +113,14 @@ else
 fi
 
 CA_CRT_ALT_NAMES=""
-# generate a list of alternative DNS names for server certificates
-if [ "$CA_CRT_TYPE" = "server" ]; then
+# generate a list of alternative DNS names for server or client certificates
+if [ "$CA_CRT_TYPE" != "user" ]; then
     i=1
     for ALT_NAME in "$CA_CRT_CN" "${ALT_NAMES[@]}"; do
         # also fully-qualify unqualified alt-names too (see below)
         # NOTE: except when it's the previously-fully-qualified CN...
         # XXX: maybe we should uniq the alt-names? hmm.
-        if [ "${ALT_NAME%%.*}" = "$ALT_NAME" \
+        if [ 1 -eq "$QUALIFY" -a "${ALT_NAME%%.*}" = "$ALT_NAME" \
           -a "${CA_CRT_CN%%.*}" != "$ALT_NAME" ]; then
             CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME.$CA_DOMAIN\n"
             i=$(( $i+1 ))

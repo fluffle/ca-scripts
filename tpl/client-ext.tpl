@@ -15,3 +15,4 @@ crlDistributionPoints   = URI:%CA_CRL_URI%
 [ client_altname ]
 URI=%CA_CRT_URI%
 email=move
+%CA_CRT_ALT_NAMES%

@@ -98,6 +98,18 @@ Generate a PKCS#12 format certificate archive containing the new certificate
 and private key along with the CA certificate. See pkcs12(1ssl) for more
 details about PKCS#12 archives.
 
+=item B<-q>, B<--no-qualify>
+
+Disable qualifying of the certificate's common name (and alternative names) with
+B<CA_DOMAIN>.
+
+Host names for I<server> and I<client> certificates are treated as unqualified
+if they do not contain any dots and qualified to I<common name>.B<CA_DOMAIN>.
+The unqualified name is preserved as an additional DNS name in the X.509v3
+I<subjectAltName> extension in this case. User names are treated as unqualified
+if they do not contain an "@" symbol and are qualified to I<common
+name>@B<CA_DOMAIN>.
+
 =item B<-r>, B<--csr-only>
 
 Causes B<ca-create-cert> to generate just the X.509 certificate signing
