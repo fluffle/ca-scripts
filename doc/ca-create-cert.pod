@@ -34,17 +34,11 @@ certificate.
 
 =head1 OPTIONS
 
-=head2 The host or user name
+=head2 The Common Name
 
-This argument to B<ca-create-cert> is mandatory, and specifies the common
-name of the certificate. Depending on the type of certificate being created,
-it is interpreted as either a host name or a user name. Host names are treated
-as unqualified if they do not contain any dots and are fully qualified with
-the value of B<CA_DOMAIN> in this case, though the unqualified name is preserved
-as an additional DNS name in the X.509v3 I<subjectAltName> extension. User names
-are treated as unqualified if they do not contain an "@" symbol and are fully
-qualified with the value of B<CA_DOMAIN> in this case, yielding a CN like
-I<user@example.com> assuming B<CA_DOMAIN> was set to I<example.com>.
+This argument to B<ca-create-cert> is mandatory, and specifies the common name
+of the certificate. Depending on the type of certificate being created, it is
+interpreted as either a host name or a user name.
 
 =head2 General options
 
