@@ -94,7 +94,8 @@ __TESTS__
 
     # we need to do these first to use them in other default defs
     # NOTE: bash's here-string syntax appends \n which tr turns to _ :(
-    ca_set_default CA_NAME  "$( echo -n "$CA_DOMAIN" | tr -c '[:alnum:]@-' _ )"
+    # CA_NAME is NOT configurable, due to the breakage this could cause.
+    CA_NAME="$( echo -n "$CA_DOMAIN" | tr -c '[:alnum:]@-' _ )"
     ca_set_default CA_EMAIL "ca@$CA_DOMAIN"
 
     while read varname vardef; do
@@ -121,8 +122,9 @@ __DEFAULTS__
 ca_sed_cmd() {
     # MD5 in CA_CR[TL]_MD5_FP has a non alphabetic character :(
     # XXX: pretty sure this is a dirty and wrong way of templating vars
+    #      but we can hope that there's no ascii 001 in the values...
     set | awk -F\= '/^CA_[A-Z5_]*=/{print $1}' | while read ca_var; do
-        echo "s#%$ca_var%#${!ca_var}#;"
+        echo -e "s\001%$ca_var%\001${!ca_var}\001g;"
     done
 }
 
