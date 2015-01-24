@@ -1,9 +1,9 @@
-#! /bin/bash
-# common functions for ca-scripts
+#!/bin/bash
+# Common functions for ca-scripts.
 
 PROGNAME=$( basename $0 )
 CONFFILE="/etc/ca-scripts.conf"
-SHAREDIR="/home/alex/code/ca-scripts/tpl"
+SHAREDIR=$(dirname $(dirname $0))/tpl
 CRYPTKEY="-nodes"
 
 INDEXTPL="index-html"

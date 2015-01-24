@@ -1,6 +1,6 @@
-#! /bin/bash
+#!/bin/bash
 
-. "/home/alex/code/ca-scripts/lib/ca-functions"
+source $(dirname $(dirname $0))/lib/ca-functions
 
 ALT_NAMES=()
 QUALIFY=1
