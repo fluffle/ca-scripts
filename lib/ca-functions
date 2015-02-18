@@ -49,15 +49,29 @@ ca_set_default() {
 
 ca_load_conf() {
     local varname vartest varerr vardef error ca_name
-    if [ ! -r "$CONFFILE" ]; then
-        error "Unable to find $CONFFILE."
+    if [ -r "$HOME/.ca-scripts.conf" ]; then
+        # Does a system-wide config exist? If so load it first.
+        if [ -r "$CONFFILE" ]; then
+            source "$CONFFILE"
+        fi
+        # Override system configuration with local values.
+        source "$HOME/.ca-scripts.conf"
+    elif [ -r "$CONFFILE" ]; then
+        source "$CONFFILE"
+    else
+        error "Unable to load $HOME/.ca-scripts.conf or $CONFFILE"
     fi
-    # XXX: seems like . <file> doesn't work if it's not relative to a directory
-    #      look this up on the internet sometime to work out why...
-    if [ "$CONFFILE" = "$( basename $CONFFILE )" ]; then
-        CONFFILE="./$CONFFILE"
-    fi
-    . "$CONFFILE"
+
+    # TODO: Refactored config loader with error fallback, allowing local overrides.
+    #if [ ! -r "$CONFFILE" ]; then
+    #    error "Unable to find $CONFFILE."
+    #fi
+    ## XXX: seems like . <file> doesn't work if it's not relative to a directory
+    ##      look this up on the internet sometime to work out why...
+    #if [ "$CONFFILE" = "$( basename $CONFFILE )" ]; then
+    #    CONFFILE="./$CONFFILE"
+    #fi
+    #. "$CONFFILE"
 
     error=""
     while read vartest varname; do
