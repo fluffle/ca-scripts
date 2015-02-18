@@ -55,11 +55,18 @@ ca_load_conf() {
             source "$CONFFILE"
         fi
         # Override system configuration with local values.
-        source "$HOME/.ca-scripts.conf"
+	# If manually set on command-line, don't load.
+        if [ -n "$CONFFILECLI" ]; then
+            source "$HOME/.ca-scripts.conf"
+        fi
     elif [ -r "$CONFFILE" ]; then
         source "$CONFFILE"
     else
-        error "Unable to load $HOME/.ca-scripts.conf or $CONFFILE"
+        if [ -n "$CONFFILECLI" ]; then
+            error "Unable to load $HOME/.ca-scripts.conf or $CONFFILE"
+        else
+            error "Unable to load $CONFFILE"
+        fi
     fi
 
     # TODO: Refactored config loader with error fallback, allowing local overrides.
