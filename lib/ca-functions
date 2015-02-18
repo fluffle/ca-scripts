@@ -3,7 +3,7 @@
 
 PROGNAME=$( basename $0 )
 CONFFILE="/etc/ca-scripts.conf"
-SHAREDIR=$(dirname $(dirname $0))/tpl
+SHAREDIR=$(dirname $(dirname $0))/../tpl
 CRYPTKEY="-nodes"
 
 INDEXTPL="index-html"

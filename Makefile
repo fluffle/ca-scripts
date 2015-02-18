@@ -11,7 +11,7 @@ PKG_NAME=$(NAME)-$(VERSION)
 PKG=$(PKG_DIR)/$(PKG_NAME)_$(VERSION).tar.gz
 SIG=$(PKG_DIR)/$(PKG_NAME).asc
 
-PREFIX?=/usr/local
+PREFIX?=/opt/$(NAME)
 DOC_DIR=$(PREFIX)/share/doc/$(PKG_NAME)
 
 pkg:
