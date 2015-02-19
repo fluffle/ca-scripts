@@ -268,3 +268,24 @@ ca_find_cnf() {
         fi
     fi
 }
+
+cert_info() {
+    local certFile="$1"
+    local certCN certIssuer certValid certExpire certCA certFilename
+
+    if [ -r "$certFile" ]; then
+	certFilename=$(basename "$certFile")
+        certCN="$(openssl x509 -in "$certFile" -noout -subject | sed -r 's|.*CN=(.*)|\1|; s|/[^/]*=.*$||')"
+        certIssuer="$(openssl x509 -in "$certFile" -noout -issuer | sed -r 's|.*CN=(.*)|\1|; s|/[^/]*=.*$||')"
+        certValid="$(openssl x509 -in "$certFile" -noout -startdate | sed -r 's|.*notBefore=(.*)|\1|;')"
+        certExpire="$(openssl x509 -in "$certFile" -noout -enddate | sed -r 's|.*notAfter=(.*)$|\1|;')"
+	if [ "$certCN" = "$certIssuer" ]; then
+            echo "$certFilename: $certCN expires on $certExpire"
+        else
+            echo "$certFilename: $certCN issued by $certIssuer expires on $certExpire"
+        fi
+    else
+        echo "ERROR: $certFile does not exist or cannot be read"
+    fi
+}
+
