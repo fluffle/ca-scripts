@@ -4,7 +4,7 @@ VERSION=0.9.0
 DIRS=bin lib tpl
 INSTALL_DIRS=`find $(DIRS) -type d 2>/dev/null`
 INSTALL_FILES=`find $(DIRS) -type f 2>/dev/null`
-DOC_FILES=*.md doc/*.pod
+DOC_FILES=*.conf *.md doc/*.pod
 SCRIPTS=ca-create-cert ca-init ca-list-certs ca-renew-cert ca-revoke-cert
 
 PKG_DIR=ca-scripts
