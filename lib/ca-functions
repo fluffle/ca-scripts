@@ -56,7 +56,7 @@ ca_load_conf() {
         fi
         # Override system configuration with local values.
 	# If manually set on command-line, don't load.
-        if [ -n "$CONFFILECLI" ]; then
+        if [ -z "$CONFFILECLI" ]; then
             source "$HOME/.ca-scripts.conf"
         fi
     elif [ -r "$CONFFILE" ]; then
