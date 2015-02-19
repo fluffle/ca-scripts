@@ -39,6 +39,9 @@ opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
 
+CRT_ONLY=0
+CNF_ONLY=0
+
 while :; do
     case "$1" in
         -h|--help) usage; exit 0;;

@@ -140,6 +140,7 @@ CA_CRT_E        $CA_EMAIL
 __DEFAULTS__
 }
 
+# TODO: Remove this, as it's no longer used.
 ca_sed_cmd() {
     # MD5 in CA_CR[TL]_MD5_FP has a non alphabetic character :(
     # XXX: pretty sure this is a dirty and wrong way of templating vars
@@ -150,7 +151,7 @@ ca_sed_cmd() {
 }
 
 ca_template() {
-    local template dest
+    local template dest sedstr
 
     if [ -r "$1" ]; then
         template="$1"
@@ -161,7 +162,13 @@ ca_template() {
     fi
     dest="$2"
 
-    sed -e "$(ca_sed_cmd)" <"$template" >"$dest"
+    while read ca_var; do
+        sedstr="${sedstr}s"$'\1'"%$ca_var%"$'\1'"${!ca_var}"$'\1'"g; "
+        #sedstr="${sedstr}s%$ca_var%${!ca_var}g; "
+    done < <(set | awk -F\= '/^CA_[A-Z5_]*=/{print $1}')
+
+    #echo "DEBUG: setstr=$sedstr"
+    sed -e "$sedstr" <"$template" >"$dest"
 }
 
 ca_gen_crl() {
