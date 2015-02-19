@@ -1,10 +1,11 @@
 NAME=ca-scripts
-VERSION=1.0.0
+VERSION=0.9.0
 
 DIRS=bin lib tpl
 INSTALL_DIRS=`find $(DIRS) -type d 2>/dev/null`
 INSTALL_FILES=`find $(DIRS) -type f 2>/dev/null`
 DOC_FILES=*.md doc/*.pod
+SCRIPTS=ca-create-cert ca-init ca-list-certs ca-renew-cert ca-revoke-cert
 
 PKG_DIR=ca-scripts
 PKG_NAME=$(NAME)-$(VERSION)
@@ -12,7 +13,8 @@ PKG=$(PKG_DIR)/$(PKG_NAME)_$(VERSION).tar.gz
 SIG=$(PKG_DIR)/$(PKG_NAME).asc
 
 PREFIX?=/opt/$(NAME)
-DOC_DIR=$(PREFIX)/share/doc/$(PKG_NAME)
+DOC_DIR=$(PREFIX)/doc
+#DOC_DIR=$(PREFIX)/share/doc/$(PKG_NAME)
 
 pkg:
 	mkdir -p $(PKG_DIR)
@@ -46,9 +48,15 @@ install:
 	mkdir -p $(DOC_DIR)
 	cp -r $(DOC_FILES) $(DOC_DIR)/
 
+symlinks:
+	for link in $(SCRIPTS); do ln -s $(PREFIX)/bin/$$link /usr/local/bin/$$link
+
 uninstall:
 	for file in $(INSTALL_FILES); do rm -f $(PREFIX)/$$file; done
 	rm -rf $(DOC_DIR)
+
+rmsymlinks:
+	for link in $(SCRIPTS); do rm -f /usr/local/bin/$$link
 
 
 .PHONY: build sign clean test tag release install uninstall all
