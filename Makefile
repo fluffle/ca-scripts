@@ -8,8 +8,8 @@ DOC_FILES=*.conf *.md doc/*.pod
 SCRIPTS=ca-create-cert ca-init ca-list-certs ca-renew-cert ca-revoke-cert
 
 PKG_DIR=ca-scripts
-PKG_NAME=$(NAME)-$(VERSION)
-PKG=$(PKG_DIR)/$(PKG_NAME)_$(VERSION).tar.gz
+PKG_NAME=$(NAME)_$(VERSION)
+PKG=$(PKG_DIR)/$(PKG_NAME).tar.gz
 SIG=$(PKG_DIR)/$(PKG_NAME).asc
 
 PREFIX?=/opt/$(NAME)
