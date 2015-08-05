@@ -1,0 +1,50 @@
+#!/bin/bash
+
+source $(dirname $(readlink -f $0))/../lib/ca-functions
+
+usage() {
+    cat <<__EOT__
+Usage: $PROGNAME [options] <common name>|<path to certificate>
+
+Options:
+  -h, --help            Print this helpful message!
+  -f, --config FILE     Use config file instead of $CONFFILE
+  -t, --type TYPE       Certificate type: "server" (default), "client" or "user"
+  -e, --expiring        Show certificates that are expiring within 90 days
+
+__EOT__
+}
+
+short="hf:e"
+long="help,config:,expiring"
+opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
+if [ 0 -ne $? ]; then echo; usage; exit 1; fi
+eval set -- "$opts";
+
+while :; do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -f|--config) shift; CONFFILE="$1"; CONFFILECLI=1; shift;;
+        -e|--expiring) shift; USER_EXPIRE="1"; shift;;
+        --) shift; break;;
+        *) echo "Unknown value '$1'"; exit 1;;
+    esac
+done
+
+# load up the configuration file
+ca_load_conf
+
+for group in ca server client user; do
+    case $group in
+        ca)	echo "Certificate Authorities:";;
+        server)	echo; echo "Server Certificates:";;
+        client) echo; echo "Client Certificates:";;
+        user)	echo; echo "User Certificates:";;
+    esac
+      
+    while read certFile; do
+        #echo "File: $certFile"
+        cert_info "$certFile"
+    done < <(find "$CA_HOME/crt/" -type f -name "*.${group}.crt")
+done
+

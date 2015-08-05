@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $(dirname $(dirname $0))/lib/ca-functions
+source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 usage() {
     cat <<__EOT__
@@ -24,7 +24,7 @@ eval set -- "$opts";
 while :; do
     case "$1" in
         -h|--help) usage; exit 0;;
-        -f|--config) shift; CONFFILE="$1"; shift;;
+        -f|--config) shift; CONFFILE="$1"; CONFFILECLI=1; shift;;
         -t|--type) shift; USER_CA_CRT_TYPE="$1"; shift;;
         -d|--days) shift; USER_CA_CRT_DAYS="$1"; shift;;
         --) shift; break;;

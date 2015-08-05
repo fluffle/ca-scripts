@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $(dirname $(dirname $0))/lib/ca-functions
+source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 # XXX: Add an interactive mode to this script to obviate the need for a
 # pre-existing config file? e.g.
@@ -39,11 +39,14 @@ opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
 
+CRT_ONLY=0
+CNF_ONLY=0
+
 while :; do
     case "$1" in
         -h|--help) usage; exit 0;;
         -c|--encrypt) CRYPTKEY=""; shift;;
-        -f|--config) shift; CONFFILE="$1"; shift;;
+        -f|--config) shift; CONFFILE="$1"; CONFFILECLI=1; shift;;
         -d|--days) shift; USER_CA_DAYS="$1"; shift;;
         -l|--crl-days) shift; USER_CA_CRL_DAYS="$1"; shift;;
         -b|--bits) shift; USER_CA_CRT_BITS="$1"; shift;;

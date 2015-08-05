@@ -3,7 +3,7 @@
 
 PROGNAME=$( basename $0 )
 CONFFILE="/etc/ca-scripts.conf"
-SHAREDIR=$(dirname $(dirname $0))/tpl
+SHAREDIR=$(dirname $(readlink -f $0))/../tpl
 CRYPTKEY="-nodes"
 
 INDEXTPL="index-html"
@@ -49,15 +49,36 @@ ca_set_default() {
 
 ca_load_conf() {
     local varname vartest varerr vardef error ca_name
-    if [ ! -r "$CONFFILE" ]; then
-        error "Unable to find $CONFFILE."
+    if [ -r "$HOME/.ca-scripts.conf" ]; then
+        # Does a system-wide config exist? If so load it first.
+        if [ -r "$CONFFILE" ]; then
+            source "$CONFFILE"
+        fi
+        # Override system configuration with local values.
+	# If manually set on command-line, don't load.
+        if [ -z "$CONFFILECLI" ]; then
+            source "$HOME/.ca-scripts.conf"
+        fi
+    elif [ -r "$CONFFILE" ]; then
+        source "$CONFFILE"
+    else
+        if [ -n "$CONFFILECLI" ]; then
+            error "Unable to load $HOME/.ca-scripts.conf or $CONFFILE"
+        else
+            error "Unable to load $CONFFILE"
+        fi
     fi
-    # XXX: seems like . <file> doesn't work if it's not relative to a directory
-    #      look this up on the internet sometime to work out why...
-    if [ "$CONFFILE" = "$( basename $CONFFILE )" ]; then
-        CONFFILE="./$CONFFILE"
-    fi
-    . "$CONFFILE"
+
+    # TODO: Refactored config loader with error fallback, allowing local overrides.
+    #if [ ! -r "$CONFFILE" ]; then
+    #    error "Unable to find $CONFFILE."
+    #fi
+    ## XXX: seems like . <file> doesn't work if it's not relative to a directory
+    ##      look this up on the internet sometime to work out why...
+    #if [ "$CONFFILE" = "$( basename $CONFFILE )" ]; then
+    #    CONFFILE="./$CONFFILE"
+    #fi
+    #. "$CONFFILE"
 
     error=""
     while read vartest varname; do
@@ -119,6 +140,7 @@ CA_CRT_E        $CA_EMAIL
 __DEFAULTS__
 }
 
+# TODO: Remove this, as it's no longer used.
 ca_sed_cmd() {
     # MD5 in CA_CR[TL]_MD5_FP has a non alphabetic character :(
     # XXX: pretty sure this is a dirty and wrong way of templating vars
@@ -129,7 +151,7 @@ ca_sed_cmd() {
 }
 
 ca_template() {
-    local template dest
+    local template dest sedstr
 
     if [ -r "$1" ]; then
         template="$1"
@@ -140,7 +162,13 @@ ca_template() {
     fi
     dest="$2"
 
-    sed -e "$(ca_sed_cmd)" <"$template" >"$dest"
+    while read ca_var; do
+        sedstr="${sedstr}s"$'\1'"%$ca_var%"$'\1'"${!ca_var}"$'\1'"g; "
+        #sedstr="${sedstr}s%$ca_var%${!ca_var}g; "
+    done < <(set | awk -F\= '/^CA_[A-Z5_]*=/{print $1}')
+
+    #echo "DEBUG: setstr=$sedstr"
+    sed -e "$sedstr" <"$template" >"$dest"
 }
 
 ca_gen_crl() {
@@ -240,3 +268,24 @@ ca_find_cnf() {
         fi
     fi
 }
+
+cert_info() {
+    local certFile="$1"
+    local certCN certIssuer certValid certExpire certCA certFilename
+
+    if [ -r "$certFile" ]; then
+	certFilename=$(basename "$certFile")
+        certCN="$(openssl x509 -in "$certFile" -noout -subject | sed -r 's|.*CN=(.*)|\1|; s|/[^/]*=.*$||')"
+        certIssuer="$(openssl x509 -in "$certFile" -noout -issuer | sed -r 's|.*CN=(.*)|\1|; s|/[^/]*=.*$||')"
+        certValid="$(openssl x509 -in "$certFile" -noout -startdate | sed -r 's|.*notBefore=(.*)|\1|;')"
+        certExpire="$(openssl x509 -in "$certFile" -noout -enddate | sed -r 's|.*notAfter=(.*)$|\1|;')"
+	if [ "$certCN" = "$certIssuer" ]; then
+            echo "$certFilename: $certCN expires on $certExpire"
+        else
+            echo "$certFilename: $certCN issued by $certIssuer expires on $certExpire"
+        fi
+    else
+        echo "ERROR: $certFile does not exist or cannot be read"
+    fi
+}
+
