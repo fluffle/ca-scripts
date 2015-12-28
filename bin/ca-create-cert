@@ -171,6 +171,7 @@ if [ 1 -ne "$CSR_ONLY" ]; then
         fi
         openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
           -days    "$CA_CRT_DAYS" \
+          -md      "$CA_DEFAULT_MD" \
           -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" -batch \
           -out     "$CA_HOME/crt/$CNF_NAME.crt" \
           -in      "$CA_HOME/csr/$CNF_NAME.csr"

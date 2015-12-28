@@ -137,6 +137,7 @@ CA_CRT_L        $CA_DN_L
 CA_CRT_O        $CA_DN_O
 CA_CRT_OU       $CA_DN_OU
 CA_CRT_E        $CA_EMAIL
+CA_DEFAULT_MD   sha256
 __DEFAULTS__
 }
 

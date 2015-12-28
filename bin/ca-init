@@ -95,6 +95,7 @@ if [ 1 -ne "$CNF_ONLY" ]; then
 
     openssl ca -create_serial -selfsign -days "$CA_DAYS" -batch \
       -name ca_scripts -extensions ca_x509_extensions \
+      -md      "$CA_DEFAULT_MD" \
       -config  "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
       -in      "$CA_HOME/csr/$CA_NAME.ca.csr" \
       -keyfile "$CA_HOME/key/$CA_NAME.ca.key" \
