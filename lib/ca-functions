@@ -3,9 +3,9 @@
 
 PROGNAME=$( basename $0 )
 CONFFILE="/etc/ca-scripts.conf"
+OVERRIDE_FILE=/tmp/$$ca_overrides.conf
 SHAREDIR=$(dirname $(readlink -f $0))/../tpl
 CRYPTKEY="-nodes"
-
 INDEXTPL="index-html"
 INDEXOUT=""
 
@@ -33,8 +33,13 @@ ca_check_var() {
 ca_override_conf() {
     local varname
 
+
     varname="${1#USER_}"
-    eval "$varname=\"\$USER_$varname\""
+    #eval "$varname=\"\$USER_$varname\""
+.   # fix for user overrides scope issue
+.   # push variables to a file to source them later
+    echo "$varname=\"\$USER_$varname\"" >> $OVERRIDE_FILE
+
 }
 
 ca_set_default() {
@@ -106,7 +111,11 @@ __TESTS__
     set | awk -F\= '/^USER_CA_[A-Z_]*=/{print $1}' | while read user_var; do
         ca_override_conf "$user_var"
     done
-
+.   #Check if fike containing user overrides exist
+.   # the file is created if any USER_CA.* variables are set
+     [ -f $OVERRIDE_FILE ] && source $OVERRIDE_FILE
+.   # remove file after sourcing it
+     [ -f $OVERRIDE_FILE ] && rm -rf $OVERRIDE_FILE
     # XXX: and this alternative should probably have better validation ;-)
     case "$CA_CRT_TYPE" in
         server|client|user) :;;
