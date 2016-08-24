@@ -25,6 +25,7 @@ Options:
   -d, --days DAYS       Certificate valid for DAYS days instead of CA_CRT_DAYS
   -b, --bits BITS       Generate a BITS bit certificate instead of CA_CRT_BITS
   -n, --alt-name NAME   Alternative host name (can be provided multiple times)
+  -i, --ip IP ADDRESS   IP addresses to include in the certificate
   -p, --pkcs12          Create PKCS#12 certificate archive from generated cert
   -q, --no-qualify      Don't qualify short (dotless) names with CA_DOMAIN
   -r, --req-only        Only generate CSR, don't sign it
@@ -41,8 +42,8 @@ Options:
 __EOT__
 }
 
-short="hcf:t:d:b:n:pqrsx"
-long="help,encrypt,config:,type:,days:,bits:,alt-name:"
+short="hcf:t:d:b:n:i:pqrsx"
+long="help,encrypt,config:,type:,days:,bits:,alt-name:,ip:"
 long="$long,pkcs12,no-qualify,req-only,sign-only,cnf-only"
 long="$long,country:,state:,loc:,org:,ounit:,email:,comment:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
@@ -58,6 +59,7 @@ while :; do
         -d|--days) shift; USER_CA_CRT_DAYS="$1"; shift;;
         -b|--bits) shift; USER_CA_CRT_BITS="$1"; shift;;
         -n|--alt-name) shift; ALT_NAMES+=("$1"); shift;;
+        -i|--ip) shift; ALT_IPS+=("$1"); shift;;
         -p|--pkcs12) MAKE_P12=1; shift;;
         -q|--no-qualify) QUALIFY=0; shift;;
         -r|--req-only) CSR_ONLY=1; shift;;
@@ -130,6 +132,12 @@ if [ "$CA_CRT_TYPE" != "user" ]; then
         CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME\n"
         i=$(( $i+1 ))
     done
+.   p=1
+    for ALT_IP in "${ALT_IPS[@]}"; do
+        # add ips as IP.x
+            CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}IP.$p=$ALT_IP\n"
+            p=$(( $p+1 ))
+    done
 fi
 
 if [ 1 -ne "$CRT_ONLY" ]; then
@@ -171,6 +179,7 @@ if [ 1 -ne "$CSR_ONLY" ]; then
         fi
         openssl ca -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
           -days    "$CA_CRT_DAYS" \
+          -md      "$CA_DEFAULT_MD" \
           -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" -batch \
           -out     "$CA_HOME/crt/$CNF_NAME.crt" \
           -in      "$CA_HOME/csr/$CNF_NAME.csr"
