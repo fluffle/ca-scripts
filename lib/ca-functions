@@ -111,10 +111,10 @@ __TESTS__
     set | awk -F\= '/^USER_CA_[A-Z_]*=/{print $1}' | while read user_var; do
         ca_override_conf "$user_var"
     done
-.   #Check if fike containing user overrides exist
-.   # the file is created if any USER_CA.* variables are set
+    #Check if fike containing user overrides exist
+    # the file is created if any USER_CA.* variables are set
      [ -f $OVERRIDE_FILE ] && source $OVERRIDE_FILE
-.   # remove file after sourcing it
+    # remove file after sourcing it
      [ -f $OVERRIDE_FILE ] && rm -rf $OVERRIDE_FILE
     # XXX: and this alternative should probably have better validation ;-)
     case "$CA_CRT_TYPE" in
