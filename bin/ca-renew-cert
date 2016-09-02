@@ -72,7 +72,7 @@ DAYS=$(( ($ENDYEAR-$NOWYEAR)*365 + ($ENDDAYS-$NOWDAYS) ))
 openssl x509 -req -set_serial "0x$SERIAL" -days "$DAYS" \
   -CA      "$CA_HOME/crt/$CA_NAME.ca.crt" \
   -CAkey   "$CA_HOME/key/$CA_NAME.ca.key" \
-  -extfile "$CA_HOME/cfg/$CNF_NAME.ext.cnf" \
+  -extfile "$CA_HOME/cnf/$CNF_NAME.ext.cnf" \
   -out     "$CA_HOME/crt/$CNF_NAME.crt" \
   -in      "$CA_HOME/csr/$CNF_NAME.csr"
 
