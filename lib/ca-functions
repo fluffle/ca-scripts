@@ -36,8 +36,8 @@ ca_override_conf() {
 
     varname="${1#USER_}"
     #eval "$varname=\"\$USER_$varname\""
-.   # fix for user overrides scope issue
-.   # push variables to a file to source them later
+    # fix for user overrides scope issue
+    # push variables to a file to source them later
     echo "$varname=\"\$USER_$varname\"" >> $OVERRIDE_FILE
 
 }
