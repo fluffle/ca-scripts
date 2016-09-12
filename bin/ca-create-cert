@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 ALT_NAMES=()
@@ -132,7 +132,7 @@ if [ "$CA_CRT_TYPE" != "user" ]; then
         CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}DNS.$i=$ALT_NAME\n"
         i=$(( $i+1 ))
     done
-.   p=1
+    p=1
     for ALT_IP in "${ALT_IPS[@]}"; do
         # add ips as IP.x
             CA_CRT_ALT_NAMES="${CA_CRT_ALT_NAMES}IP.$p=$ALT_IP\n"

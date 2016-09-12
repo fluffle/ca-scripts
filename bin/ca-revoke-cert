@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!/bin/bash
+set -e
 source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 usage() {
