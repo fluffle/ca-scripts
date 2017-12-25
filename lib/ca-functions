@@ -1,7 +1,6 @@
 #!/bin/bash
 # Common functions for ca-scripts.
 
-PROGNAME=$( basename $0 )
 OVERRIDE_FILE=/tmp/$$ca_overrides.conf
 SHAREDIR=$(dirname $(readlink -f $0))/../tpl
 CRYPTKEY="-nodes"
@@ -56,18 +55,18 @@ ca_load_conf() {
         
     if [ -z "$CONFFILECLI" ]; then
         # Load system config, user config, local config
-        if  ! [ -r "/etc/ca-scripts.conf" ] && ! [ -r "$HOME/.ca-scripts.conf" ] && ! [ -r "$(pwd)/ca-scripts.conf" ]; then
-            error "Default configuratation is not set. You can define default configuration at the following locations\n  /etc/ca-scripts.conf (System)\n  $HOME/.ca-scripts.conf (User)\n  $(pwd)/ca-scripts.conf (Local)"
+        if  ! [ -r "/etc/tiny-ca.conf" ] && ! [ -r "$HOME/.tiny-ca.conf" ] && ! [ -r "$(pwd)/tiny-ca.conf" ]; then
+            error "Default configuratation is not set. You can define default configuration at the following locations\n  /etc/tiny-ca.conf (System)\n  $HOME/.tiny-ca.conf (User)\n  $(pwd)/tiny-ca.conf (Local)"
         fi
 
-        if [ -r "/etc/ca-scripts.conf" ]; then
-            source "/etc/ca-scripts.conf"            
+        if [ -r "/etc/tiny-ca.conf" ]; then
+            source "/etc/tiny-ca.conf"            
         fi
-        if [ -r "$HOME/.ca-scripts.conf" ]; then
-            source "$HOME/.ca-scripts.conf"
+        if [ -r "$HOME/.tiny-ca.conf" ]; then
+            source "$HOME/.tiny-ca.conf"
         fi        
-        if [ -r "$(pwd)/ca-scripts.conf" ]; then
-            source "$(pwd)/ca-scripts.conf"
+        if [ -r "$(pwd)/tiny-ca.conf" ]; then
+            source "$(pwd)/tiny-ca.conf"
             ca_set_default CA_HOME "$(pwd)"
         fi
     else         
@@ -166,13 +165,20 @@ ca_sed_cmd() {
     done
 }
 
+ca_init_templates() {
+    echo $SHAREDIR $CA_HOME/tpl
+    cp -r $SHAREDIR $CA_HOME/tpl
+}
+
 ca_template() {
     local template dest sedstr
 
+    TEMPLATESDIR=$CA_HOME/tpl
+
     if [ -r "$1" ]; then
         template="$1"
-    elif [ -r "$SHAREDIR/$1.tpl" ]; then
-        template="$SHAREDIR/$1.tpl"
+    elif [ -r "$TEMPLATESDIR/$1.tpl" ]; then
+        template="$TEMPLATESDIR/$1.tpl"
     else
         error "Could not read from template $1"
     fi
