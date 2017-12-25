@@ -34,6 +34,17 @@ This will by default install to `/usr/local`, either `export PREFIX=/path` or
 `make PREFIX=/path; sudo make PREFIX=/path install` to change this to an
 alternative location.
 
+MacOS note
+------------
+
+To make ca-scripts work on MacOS you have to install the following
+
+```
+brew install coreutils
+brew install gnu-getopt
+brew install gnu-sed
+```
+
 Creating a Certificate Authority
 --------------------------------
 
