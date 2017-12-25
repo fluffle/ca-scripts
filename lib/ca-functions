@@ -120,12 +120,7 @@ __TESTS__
     # the file is created if any USER_CA.* variables are set
      [ -f $OVERRIDE_FILE ] && source $OVERRIDE_FILE
     # remove file after sourcing it
-     [ -f $OVERRIDE_FILE ] && rm -rf $OVERRIDE_FILE
-    # XXX: and this alternative should probably have better validation ;-)
-    case "$CA_CRT_TYPE" in
-        server|client|user) :;;
-        *) error "Unrecognised certificate type '$CA_CRT_TYPE'!";;
-    esac
+     [ -f $OVERRIDE_FILE ] && rm -rf $OVERRIDE_FILE    
 
     # we need to do these first to use them in other default defs
     # NOTE: bash's here-string syntax appends \n which tr turns to _ :(
@@ -153,6 +148,12 @@ CA_CRT_OU       $CA_DN_OU
 CA_CRT_E        $CA_EMAIL
 CA_DEFAULT_MD   sha256
 __DEFAULTS__
+
+# XXX: and this alternative should probably have better validation ;-)
+    case "$CA_CRT_TYPE" in
+        server|client|user) :;;
+        *) error "Unrecognised certificate type '$CA_CRT_TYPE'!";;
+    esac
 }
 
 # TODO: Remove this, as it's no longer used.
