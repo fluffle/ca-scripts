@@ -3,8 +3,9 @@ default_bits            = %CA_CRT_BITS%
 default_md              = sha1
 distinguished_name      = req_dn
 req_extensions          = req_%CA_CRT_TYPE%_extensions
-string_mask             = nombstr
 prompt                  = no
+string_mask 			= utf8only
+utf8        			= yes
 
 [ req_dn ]
 C                       = %CA_CRT_C%
