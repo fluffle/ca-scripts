@@ -1,0 +1,38 @@
+#!/bin/bash
+# set -e
+
+#Add GNU tools to path for MacOS
+if [ "Darwin" = `uname -s` ]; then
+    export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+    export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"            
+fi
+
+scriptsDir=$(dirname $(readlink -f $0))
+script=$1
+
+shift
+
+usage() {
+    cat <<__EOT__
+Usage: tiny-ca subcommand [options] <common name>|<path to certificate>
+
+Subcommands:
+  init         
+  new     
+  list    
+  renew        
+  revoke       
+
+__EOT__
+}
+
+case "$script" in
+	"") usage; exit 1;;
+    init) $scriptsDir/ca-init $@;;
+	  new) $scriptsDir/ca-create-cert $@;;
+    list) $scriptsDir/ca-list-certs $@;;
+    renew) $scriptsDir/ca-renew-cert $@;;
+    revoke) $scriptsDir/ca-revoke-cert $@;;	
+    *) echo "Unknown subcomand '$1'"; usage; exit 1;;
+esac

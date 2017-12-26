@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+
 source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 # XXX: Add an interactive mode to this script to obviate the need for a
@@ -15,7 +16,7 @@ source $(dirname $(readlink -f $0))/../lib/ca-functions
 
 usage() {
     cat <<__EOT__
-Usage: $PROGNAME [options]
+Usage: tiny-ca init [options]
 
 Options:
   -h, --help            Print this helpful message!
@@ -71,23 +72,22 @@ fi
 
 if [ 1 -ne "$CRT_ONLY" ]; then
     # create the directory structure that'll be populated by the scripts
-    mkdir -p $CA_HOME/{cnf,crl,crt,csr,db,idx,key,p12}
+    mkdir -p $CA_HOME/{cnf,crl,crt,csr,db,idx,key,p12}    
     echo "01" > $CA_HOME/db/crlnumber
     touch $CA_HOME/db/index.txt
     touch $CA_HOME/db/.rand
 
-    # generate an openssl configuration for this CA
-    ca_template ca-config "$CA_HOME/cnf/$CA_NAME.ca.cnf"
+    ca_init_templates        
 fi
 if [ 1 -ne "$CNF_ONLY" ]; then
-    if [ ! -f "$CA_HOME/cnf/$CA_NAME.ca.cnf" ]; then
-        # looks like someone's running ca-init with -s without using -x first
-        error "Could not find CA config. Please run ca-init -x before using ca-init -s."
-    fi
+    # generate an openssl configuration for this CA
+    ca_template ca-config "$CA_HOME/cnf/$CA_NAME.ca.cnf"
+    
     # generate a self-signed cert that is valid for 10 years, with
     #  ... the private key in $CA_HOME/key/$CA_NAME.ca.key
     #  ... the certificate in $CA_HOME/crt/$CA_NAME.ca.crt
-    #  ... using the config in $CA_HOME/cnf/$CA_NAME.ca.cnf
+    #  ... using the config in $CA_HOME/cnf/$CA_NAME.ca.cnf    
+
     openssl req -new $CRYPTKEY -config "$CA_HOME/cnf/$CA_NAME.ca.cnf" \
       -keyout "$CA_HOME/key/$CA_NAME.ca.key" \
       -out    "$CA_HOME/csr/$CA_NAME.ca.csr"

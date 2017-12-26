@@ -146,8 +146,9 @@ default_md              = sha1
 distinguished_name      = ca_req_dn
 x509_extensions         = ca_x509_extensions
 req_extensions          = ca_req_extensions
-string_mask             = nombstr
 prompt                  = no
+string_mask 			= utf8only
+utf8        			= yes
 
 # ---------------------------------------------------------------------------- #
 # This defines the DN of the CA certificate.
