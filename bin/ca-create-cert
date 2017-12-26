@@ -34,7 +34,7 @@ Options:
   -x, --cnf-only        Only generate templates, do not create CSR or sign CRT
   --country             Certificate DN -- C
   --state               Certificate DN -- ST
-  --loc                 Certificate DN -- L
+  --location            Certificate DN -- L
   --org                 Certificate DN -- O
   --ounit               Certificate DN -- OU
   --email               Certificate DN -- E
@@ -46,7 +46,7 @@ __EOT__
 short="hcf:t:d:b:n:i:pqrsx"
 long="help,encrypt,config:,type:,days:,bits:,alt-name:,ip:"
 long="$long,pkcs12,no-qualify,req-only,sign-only,cnf-only"
-long="$long,country:,state:,loc:,org:,ounit:,email:,comment:"
+long="$long,country:,state:,location:,org:,ounit:,email:,comment:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
 if [ 0 -ne $? ]; then echo; usage; exit 1; fi
 eval set -- "$opts";
