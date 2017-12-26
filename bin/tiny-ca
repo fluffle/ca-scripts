@@ -11,7 +11,7 @@ fi
 scriptsDir=$(dirname $(readlink -f $0))
 script=$1
 
-# shift
+shift
 
 usage() {
     cat <<__EOT__
@@ -30,7 +30,7 @@ __EOT__
 case "$script" in
 	"") usage; exit 1;;
     init) $scriptsDir/ca-init $@;;
-	new) $scriptsDir/ca-create-cert $@;;
+	  new) $scriptsDir/ca-create-cert $@;;
     list) $scriptsDir/ca-list-certs $@;;
     renew) $scriptsDir/ca-renew-cert $@;;
     revoke) $scriptsDir/ca-revoke-cert $@;;	
