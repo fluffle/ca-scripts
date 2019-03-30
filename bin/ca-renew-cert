@@ -15,6 +15,10 @@ Options:
 __EOT__
 }
 
+remove_leading_zeros() {
+	sed 's/^0\+//'
+}
+
 short="hf:t:d:"
 long="help,config:,type:,days:"
 opts=$( getopt -o "$short" -l "$long" -n "$PROGNAME" -- "$@" )
@@ -58,10 +62,10 @@ SERIAL=$( openssl x509 -in "$CRT" -noout -serial | cut -d= -f2 )
 # these dates are "<year> <day of year>"
 export TZ=UTC
 NOWYEAR=$( date +%Y )
-NOWDAYS=$( date +%j )
+NOWDAYS=$( date +%j | remove_leading_zeros )
 # XXX: this only works with GNU date, BSD portability fail.
 ENDYEAR=$( date +%Y -d "$ENDDATE + $CA_CRT_DAYS days" )
-ENDDAYS=$( date +%j -d "$ENDDATE + $CA_CRT_DAYS days" )
+ENDDAYS=$( date +%j -d "$ENDDATE + $CA_CRT_DAYS days" | remove_leading_zeros )
 CERTDATE=$( date +%Y-%m-%d -d "$ENDDATE" )
 
 # and this does the maths to work out how many days there are from now
